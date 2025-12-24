@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schemas.mcp.dev/mcp.schema.json",
+  "version": "1.0",
+  "servers": {
+    "xcodebuild": {
+        "command": "npx",
+		"args": [
+			"-y",
+			"xcodebuildmcp@latest"
+		]
+
+  	},
+	 "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context-mcp"],
+      "env": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+      }
+    },
+    "markitdown": {
+      "command": "uvx",
+      "args": ["mcp-server-markitdown"]
+    },
+    "codemod": {
+      "command": "npx",
+      "args": ["codemod@latest", "mcp"]
+    }
+}
+}

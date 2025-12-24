@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schemas.mcp.dev/mcp.schema.json",
+  "version": "1.0",
+  "servers": {
+    "xcodebuild": {
+      "command": "xcodebuild",
+      "args": ["-scheme", "SwiftTemplate", "-destination", "platform=macOS"],
+      "env": {
+        "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer"
+      },
+      "capabilities": {
+        "build": true,
+        "test": true,
+        "analyze": true
+      },
+      "description": "XCodeBuild MCP server to build and test SwiftTemplate via xcodebuild",
+      "workingDirectory": "."
+    }
+  }
+}

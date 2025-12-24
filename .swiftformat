@@ -1,0 +1,15 @@
+# SwiftFormat configuration
+# Align with Swift 6 conventions and project prefs
+--swiftversion 6.0
+--indent 4
+--wraparguments before-first
+--wrapelements before-first
+--hexgrouping 4,8
+--decimalgrouping 3
+--binarygrouping 4
+--ranges no-space
+--commas inline
+--self remove
+--disable redundantSelf,blankLinesAtStartOfScope,redundantReturn,redundantVoidReturnType
+--enable markTypes,markClasses,markExtensions
+--exclude .build,DerivedData,.swiftpm
