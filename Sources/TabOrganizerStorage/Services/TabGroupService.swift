@@ -1,6 +1,6 @@
 import Foundation
+import TabOrganizerCore
 import TabOrganizerSafariAPI
-import TabOrganizerStorage
 
 /// Service for managing tab groups with business logic and validation.
 ///

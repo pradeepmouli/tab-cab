@@ -30,7 +30,10 @@ let package = Package(
         // Storage and persistence layer
         .target(
             name: "TabOrganizerStorage",
-            dependencies: ["TabOrganizerCore"],
+            dependencies: [
+                "TabOrganizerCore",
+                "TabOrganizerSafariAPI"
+            ],
             path: "Sources/TabOrganizerStorage"
         ),
         
