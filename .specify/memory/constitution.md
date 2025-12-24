@@ -1,4 +1,4 @@
-<!-- 
+<!--
 SYNC IMPACT REPORT (2025-12-24)
 ================================
 Version: 1.0.0 (NEW - initial constitution established)
@@ -76,13 +76,13 @@ All UI elements MUST have accessibility labels. VoiceOver support is mandatory. 
 
 ## Technical Stack & Requirements
 
-**Language**: Swift 6.1+ only; no Objective-C or hybrid code.  
-**UI Frameworks**: SwiftUI for all UI; AppKit/UIKit only if Safari extension APIs require it.  
-**Concurrency**: Swift Concurrency (async/await, actors, @MainActor); no GCD or completion handlers.  
-**Package Management**: Swift Package Manager (SPM); no CocoaPods or Carthage.  
-**Testing**: Swift Testing framework only (@Test, @Suite, #expect, #require).  
-**Minimum Deployment**: macOS 15.0, iOS 18.0.  
-**Entitlements**: Safari extension entitlements only; no keychain-access-groups, location, camera, microphone without explicit user consent.  
+**Language**: Swift 6.1+ only; no Objective-C or hybrid code.
+**UI Frameworks**: SwiftUI for all UI; AppKit/UIKit only if Safari extension APIs require it.
+**Concurrency**: Swift Concurrency (async/await, actors, @MainActor); no GCD or completion handlers.
+**Package Management**: Swift Package Manager (SPM); no CocoaPods or Carthage.
+**Testing**: Swift Testing framework only (@Test, @Suite, #expect, #require).
+**Minimum Deployment**: macOS 15.0, iOS 18.0.
+**Entitlements**: Safari extension entitlements only; no keychain-access-groups, location, camera, microphone without explicit user consent.
 **Build System**: Xcode 16+; no custom build scripts unless unavoidable.
 
 ## Development Workflow

@@ -1,6 +1,6 @@
 # Storage API Contract
 
-**Purpose**: Define persistence layer APIs for tab groups, settings, and cleanup history  
+**Purpose**: Define persistence layer APIs for tab groups, settings, and cleanup history
 **Implementation**: `TabOrganizerStorage` library
 
 ---
@@ -396,7 +396,7 @@ enum StorageError: Error, LocalizedError {
     case encodingFailed
     case decodingFailed
     case corruptedData
-    
+
     var errorDescription: String? {
         switch self {
         case .permissionDenied:

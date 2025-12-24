@@ -1,6 +1,6 @@
 # Tasks: AI-Powered Safari Tab Organizer
 
-**Input**: Design documents from `/specs/001-ai-tab-organizer/`  
+**Input**: Design documents from `/specs/001-ai-tab-organizer/`
 **Prerequisites**: plan.md (complete), spec.md (complete), research.md (complete), data-model.md (complete), contracts/ (complete)
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
@@ -322,15 +322,15 @@ After MVP is stable:
 
 ## Task Summary
 
-**Total Tasks**: 110  
-**Phase 1 (Setup)**: 9 tasks  
-**Phase 2 (Foundation)**: 20 tasks ← **BLOCKING**  
-**Phase 3 (US1 - MVP)**: 17 tasks  
-**Phase 4 (US2)**: 20 tasks  
-**Phase 5 (US3)**: 8 tasks  
-**Phase 6 (US4)**: 9 tasks  
-**Phase 7 (US5)**: 9 tasks  
-**Phase 8 (Polish)**: 18 tasks  
+**Total Tasks**: 110
+**Phase 1 (Setup)**: 9 tasks
+**Phase 2 (Foundation)**: 20 tasks ← **BLOCKING**
+**Phase 3 (US1 - MVP)**: 17 tasks
+**Phase 4 (US2)**: 20 tasks
+**Phase 5 (US3)**: 8 tasks
+**Phase 6 (US4)**: 9 tasks
+**Phase 7 (US5)**: 9 tasks
+**Phase 8 (Polish)**: 18 tasks
 
 **Estimated Timeline** (1 developer):
 - Foundation: 2 weeks
@@ -348,12 +348,12 @@ After MVP is stable:
 
 After each phase, verify:
 
-✅ **Phase 2**: All tests pass, foundation libraries compile, mocks work  
-✅ **Phase 3 (US1)**: Can create group, persist, restore after Safari restart  
-✅ **Phase 4 (US2)**: AI suggests meaningful groups in <5s for 50 tabs  
-✅ **Phase 5 (US3)**: Highlighting works correctly, no false positives  
-✅ **Phase 6 (US4)**: Rearrangement completes in <1s, respects pinned tabs  
-✅ **Phase 7 (US5)**: Cleanup suggestions accurate, undo works reliably  
-✅ **Phase 8**: Accessibility verified, i18n ready, security audit passed  
+✅ **Phase 2**: All tests pass, foundation libraries compile, mocks work
+✅ **Phase 3 (US1)**: Can create group, persist, restore after Safari restart
+✅ **Phase 4 (US2)**: AI suggests meaningful groups in <5s for 50 tabs
+✅ **Phase 5 (US3)**: Highlighting works correctly, no false positives
+✅ **Phase 6 (US4)**: Rearrangement completes in <1s, respects pinned tabs
+✅ **Phase 7 (US5)**: Cleanup suggestions accurate, undo works reliably
+✅ **Phase 8**: Accessibility verified, i18n ready, security audit passed
 
 **Final Gate**: All 10 success criteria from spec.md met (SC-001 through SC-010)

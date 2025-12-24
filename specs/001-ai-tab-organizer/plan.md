@@ -13,14 +13,14 @@ Create a Safari extension that intelligently organizes browser tabs through manu
 
 ## Technical Context
 
-**Language/Version**: Swift 6.1+ (strict concurrency mode enabled)  
-**Primary Dependencies**: Safari Extensions framework, SwiftUI, NaturalLanguage framework, CoreML (on-device), Combine (for reactive state)  
-**Storage**: Safari local storage APIs (localStorage equivalent), Keychain for sensitive data (if needed for future features)  
-**Testing**: Swift Testing framework (@Test, @Suite, #expect, #require)  
+**Language/Version**: Swift 6.1+ (strict concurrency mode enabled)
+**Primary Dependencies**: Safari Extensions framework, SwiftUI, NaturalLanguage framework, CoreML (on-device), Combine (for reactive state)
+**Storage**: Safari local storage APIs (localStorage equivalent), Keychain for sensitive data (if needed for future features)
+**Testing**: Swift Testing framework (@Test, @Suite, #expect, #require)
 **Target Platform**: macOS 15.0+, iOS 18.0+ (Safari extension support)
-**Project Type**: Safari Extension + SPM Libraries (hybrid: extension target + shared packages)  
-**Performance Goals**: <5s for AI analysis of 50 tabs, <1s for tab rearrangement, <100ms UI response time  
-**Constraints**: <100MB memory for 200 tabs, on-device processing only (no external APIs), HTTPS-only network requests (future features)  
+**Project Type**: Safari Extension + SPM Libraries (hybrid: extension target + shared packages)
+**Performance Goals**: <5s for AI analysis of 50 tabs, <1s for tab rearrangement, <100ms UI response time
+**Constraints**: <100MB memory for 200 tabs, on-device processing only (no external APIs), HTTPS-only network requests (future features)
 **Scale/Scope**: Support 20-200 tabs per user, 5 user stories (P1-P5), ~15 SwiftUI views, 5-8 SPM library targets
 
 ## Constitution Check

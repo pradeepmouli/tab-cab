@@ -1,7 +1,7 @@
 # Research: AI-Powered Safari Tab Organizer
 
-**Phase**: 0 (Outline & Research)  
-**Date**: 2025-12-24  
+**Phase**: 0 (Outline & Research)
+**Date**: 2025-12-24
 **Purpose**: Resolve all NEEDS CLARIFICATION items from Constitution Check
 
 ## Research Tasks
@@ -337,12 +337,12 @@ Safari Extension UI is either:
 
 ### Resolved Clarifications
 
-✅ **Safari Extension APIs**: Comprehensive tab access available, must build custom groups (native groups not exposed)  
-✅ **Keychain**: Not needed for MVP - Safari local storage sufficient  
-✅ **Private Browsing**: `isPrivate` property available - must exclude from all processing  
-✅ **Testing**: Protocol-oriented architecture with mocks - Swift Testing fully supported  
-✅ **Build Integration**: Local SPM + Xcode wrapper - proven pattern from current project  
-✅ **Permissions**: Minimal permissions (tab/window access only) - clear user prompts  
+✅ **Safari Extension APIs**: Comprehensive tab access available, must build custom groups (native groups not exposed)
+✅ **Keychain**: Not needed for MVP - Safari local storage sufficient
+✅ **Private Browsing**: `isPrivate` property available - must exclude from all processing
+✅ **Testing**: Protocol-oriented architecture with mocks - Swift Testing fully supported
+✅ **Build Integration**: Local SPM + Xcode wrapper - proven pattern from current project
+✅ **Permissions**: Minimal permissions (tab/window access only) - clear user prompts
 ✅ **Accessibility**: Full SwiftUI accessibility support - standard modifiers work
 
 ### Constitution Re-Check

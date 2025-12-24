@@ -1,7 +1,7 @@
 # Data Model: AI-Powered Safari Tab Organizer
 
-**Phase**: 1 (Design & Contracts)  
-**Date**: 2025-12-24  
+**Phase**: 1 (Design & Contracts)
+**Date**: 2025-12-24
 **Input**: Feature spec requirements and research findings
 
 ## Entity Definitions
@@ -277,16 +277,16 @@ enum CleanupCriteria: String, Codable {
 
 ## Edge Case Handling
 
-**Duplicate Group Names**: Append " (2)" to name on collision  
-**Orphaned Tabs**: Remove groupID if referenced group is deleted  
-**Private Tabs**: Filter at ingestion, never stored  
-**Tab Closure**: Remove from group's tabIDs array, cascade delete if last tab  
-**Window Closure**: Archive groups for potential restore (30-day retention)  
+**Duplicate Group Names**: Append " (2)" to name on collision
+**Orphaned Tabs**: Remove groupID if referenced group is deleted
+**Private Tabs**: Filter at ingestion, never stored
+**Tab Closure**: Remove from group's tabIDs array, cascade delete if last tab
+**Window Closure**: Archive groups for potential restore (30-day retention)
 **Concurrent Modifications**: Last-write-wins strategy (acceptable for single-user extension)
 
 ---
 
 ## Next Steps
 
-✅ Data model complete - ready for contract generation  
+✅ Data model complete - ready for contract generation
 → Proceed to generate API contracts in `contracts/` directory

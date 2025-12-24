@@ -1,6 +1,6 @@
 # AI Analysis API Contract
 
-**Purpose**: Define AI/ML analysis APIs for tab context, similarity, and grouping suggestions  
+**Purpose**: Define AI/ML analysis APIs for tab context, similarity, and grouping suggestions
 **Implementation**: `TabOrganizerAI` library
 
 ---
@@ -107,7 +107,7 @@ enum TabCategory: String, Codable {
     case research        // Academic, papers, references
     case entertainment   // Games, media, fun content
     case unknown         // Couldn't classify (low confidence)
-    
+
     var confidence: Double { get set }
 }
 ```
@@ -238,7 +238,7 @@ enum AIError: Error, LocalizedError {
     case classificationFailed
     case modelNotLoaded
     case mlFrameworkUnavailable
-    
+
     var errorDescription: String? {
         switch self {
         case .insufficientData:
@@ -350,7 +350,7 @@ default:
 ```swift
 final class MockContextAnalyzer: ContextAnalyzer {
     var stubbedAnalysis: ContextAnalysis?
-    
+
     func analyzeContext(for sourceTab: TabInfo, allTabs: [TabInfo]) async throws -> ContextAnalysis {
         return stubbedAnalysis ?? ContextAnalysis(/* defaults */)
     }
@@ -361,10 +361,10 @@ final class MockContextAnalyzer: ContextAnalyzer {
 
 ## Privacy Compliance
 
-✅ **On-Device Only**: All ML processing happens locally (NaturalLanguage, CoreML)  
-✅ **No External APIs**: Zero network requests for AI features  
-✅ **No Data Transmission**: Tab titles/URLs never leave device  
-✅ **Private Tab Exclusion**: Private tabs filtered before analysis  
+✅ **On-Device Only**: All ML processing happens locally (NaturalLanguage, CoreML)
+✅ **No External APIs**: Zero network requests for AI features
+✅ **No Data Transmission**: Tab titles/URLs never leave device
+✅ **Private Tab Exclusion**: Private tabs filtered before analysis
 ✅ **Minimal Data Retention**: Context analysis cached for 5 min max (not persisted)
 
 Complies with Constitution Principle II (Privacy-First Data Handling).

@@ -1,8 +1,8 @@
 # Feature Specification: AI-Powered Safari Tab Organizer
 
-**Feature Branch**: `001-ai-tab-organizer`  
-**Created**: 2025-12-24  
-**Status**: Draft  
+**Feature Branch**: `001-ai-tab-organizer`
+**Created**: 2025-12-24
+**Status**: Draft
 **Input**: User description: "Create an AI-powered safari extension for organization (via tab groups) and cleanup of tabs. Support advanced features such as rearranging/highlighting tabs based on context, e.g. automatically moving/highlighting tabs with similar purpose and content when a tab is selected."
 
 ## User Scenarios & Testing *(mandatory)*

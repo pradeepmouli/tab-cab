@@ -1,6 +1,6 @@
 # Tab API Contract
 
-**Purpose**: Define internal APIs for tab manipulation, querying, and tracking  
+**Purpose**: Define internal APIs for tab manipulation, querying, and tracking
 **Implementation**: `TabOrganizerSafariAPI` and `TabOrganizerCore` libraries
 
 ---
@@ -222,7 +222,7 @@ enum TabAPIError: Error, LocalizedError {
     case safariUnavailable
     case cannotCloseLastTab
     case invalidURL(URL)
-    
+
     var errorDescription: String? {
         switch self {
         case .permissionDenied:
