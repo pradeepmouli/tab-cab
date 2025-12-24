@@ -155,7 +155,7 @@ The extension identifies tabs that haven't been viewed in a configurable time pe
 #### Privacy & Security
 
 - **FR-029**: System MUST NOT transmit tab URLs or content to external servers without explicit user consent
-- **FR-030**: System MUST store all data locally using Safari's secure storage APIs
+- **FR-030**: System MUST store all data locally using Safari local storage (UserDefaults-backed, 5MB limit, JSON-encoded)
 - **FR-031**: System MUST exclude private browsing tabs from AI analysis and cleanup suggestions
 - **FR-032**: System MUST request only necessary Safari permissions (tabs, storage)
 - **FR-033**: System MUST provide clear privacy policy explaining data usage and retention

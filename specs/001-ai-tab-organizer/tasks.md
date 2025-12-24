@@ -133,7 +133,7 @@
 
 ### US2 - Classification & Grouping
 
-- [ ] T056 [US2] Create CoreML text classification model (offline training) or use rule-based fallback in Sources/TabOrganizerAI/Resources/TabClassifier.mlmodelc
+- [ ] T056 [US2] Create CoreML text classification model placeholder with rule-based fallback (MVP default: heuristics only, CoreML optional future enhancement) in Sources/TabOrganizerAI/Resources/TabClassifier.mlmodelc
 - [ ] T057 [US2] Implement CoreMLTabClassifier in Sources/TabOrganizerAI/Classifiers/CoreMLTabClassifier.swift with fallback heuristics
 - [ ] T058 [US2] Implement ClusteringGroupingSuggester in Sources/TabOrganizerAI/Suggesters/ClusteringGroupingSuggester.swift with hierarchical clustering
 - [ ] T059 [US2] Write TabClassifier tests in Tests/TabOrganizerAITests/CoreMLTabClassifierTests.swift
@@ -142,7 +142,7 @@
 ### US2 - UI & Integration
 
 - [ ] T061 [P] [US2] Create GroupSuggestion struct in Sources/TabOrganizerCore/Models/GroupSuggestion.swift
-- [ ] T062 [US2] Create SuggestionsView in Sources/TabOrganizerUI/Views/SuggestionsView.swift with preview and edit capabilities
+- [ ] T062 [US2] Create SuggestionsView in Sources/TabOrganizerUI/Views/SuggestionsView.swift with preview, edit capabilities, and explanation labels showing grouping rationale (FR-008: "Same domain", "Similar keywords: X, Y, Z")
 - [ ] T063 [US2] Add "Suggest Groups" button to GroupListView toolbar in Sources/TabOrganizerUI/Views/GroupListView.swift
 - [ ] T064 [US2] Wire AI analysis to SuggestionsView with progress indicator in Sources/TabOrganizerUI/Views/SuggestionsView.swift
 - [ ] T065 [US2] Write US2 integration test in Tests/TabOrganizerIntegrationTests/US2_AIGroupingTests.swift (full suggest-accept flow)
@@ -210,7 +210,7 @@
 
 ### US5 - UI & Settings
 
-- [ ] T088 [P] [US5] Create CleanupView in Sources/TabOrganizerUI/Views/CleanupView.swift with tab preview and keep/close actions
+- [ ] T088 [P] [US5] Create CleanupView in Sources/TabOrganizerUI/Views/CleanupView.swift with tab preview, keep/close actions, and "Keep" marking to exclude specific tabs from future suggestions (FR-026)
 - [ ] T089 [US5] Add cleanup settings to SettingsView in Sources/TabOrganizerUI/Views/SettingsView.swift (threshold, auto-close toggle)
 - [ ] T090 [US5] Add cleanup notification/prompt to ExtensionState in Sources/TabOrganizerUI/State/ExtensionState.swift
 - [ ] T091 [US5] Add undo button to CleanupView in Sources/TabOrganizerUI/Views/CleanupView.swift
@@ -254,6 +254,8 @@
 - [ ] T108 Run full test suite with code coverage report (target 80% for critical paths)
 - [ ] T109 End-to-end manual testing of all 5 user stories in Safari
 - [ ] T110 Beta testing with 5-10 users for feedback on usability
+- [ ] T111 [P] Implement keyboard shortcuts for common actions (create group, trigger suggestions, toggle highlighting) in Sources/TabOrganizerUI/KeyboardShortcutHandler.swift (FR-037)
+- [ ] T112 [P] Implement backup/restore for groups and settings in Sources/TabOrganizerCore/Services/BackupService.swift with JSON export/import (FR-036)
 
 ---
 
