@@ -124,20 +124,36 @@ public final class TabGroupService: Sendable {
     ///   - tabID: Tab identifier
     ///   - fromGroupID: Source group identifier (nil if ungrouped)
     ///   - toGroupID: Target group identifier (nil to ungroup)
-    /// - Throws: StorageError if group not found
+    /// - Throws: StorageError if group not found or if the move cannot be completed.
     public func moveTab(
         _ tabID: String,
         fromGroup fromGroupID: UUID?,
         toGroup toGroupID: UUID?
     ) async throws {
+        // No-op if source and target are the same
+        if fromGroupID == toGroupID {
+            return
+        }
+        
+        var removedFromSource = false
+        
         // Remove from source group if specified
         if let fromGroupID = fromGroupID {
             try await removeTab(tabID, fromGroup: fromGroupID)
+            removedFromSource = true
         }
         
-        // Add to target group if specified
+        // Add to target group if specified, with rollback on failure
         if let toGroupID = toGroupID {
-            try await addTab(tabID, toGroup: toGroupID)
+            do {
+                try await addTab(tabID, toGroup: toGroupID)
+            } catch {
+                // Best-effort rollback: if we removed from a source group, try to restore it
+                if removedFromSource, let fromGroupID = fromGroupID {
+                    try? await addTab(tabID, toGroup: fromGroupID)
+                }
+                throw error
+            }
         }
     }
     
