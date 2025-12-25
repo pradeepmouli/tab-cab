@@ -26,7 +26,11 @@ public protocol StorageAdapter: Sendable {
     /// - Parameter key: Storage key
     func remove(_ key: String) async throws
     
-    /// Remove all stored values
+    /// Remove all values from the underlying storage backend associated with this adapter.
+    ///
+    /// Implementations are expected to clear the entire backing store for the adapter’s
+    /// domain (for example, all keys in the associated UserDefaults suite), which may
+    /// include keys that were not originally written via this adapter.
     func removeAll() async throws
     
     /// Check if a key exists in storage
