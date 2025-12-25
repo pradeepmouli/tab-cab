@@ -19,15 +19,15 @@
 
 **Purpose**: Project initialization and Safari Extension foundation
 
-- [ ] T001 Create root Package.swift with 5 library targets (TabOrganizerCore, TabOrganizerAI, TabOrganizerStorage, TabOrganizerUI, TabOrganizerSafariAPI)
-- [ ] T002 Create Xcode workspace TabOrganizer.xcworkspace linking Package.swift
-- [ ] T003 Create Safari Extension target TabOrganizerExtension in Xcode project
-- [ ] T004 [P] Configure Config/TabOrganizer.entitlements with Safari Extension permissions (tabs, windows, storage)
-- [ ] T005 [P] Configure Config/Shared.xcconfig with build settings (Swift 6.1, strict concurrency, macOS 15.0+, iOS 18.0+)
-- [ ] T006 Create Sources/TabOrganizerExtension/Info.plist with extension metadata and permissions
-- [ ] T007 [P] Create .swiftlint.yml for code style enforcement
-- [ ] T008 [P] Add swift-log dependency to Package.swift for logging
-- [ ] T009 Create Tests directory structure (5 test targets matching library targets + integration tests)
+- [X] T001 Create root Package.swift with 5 library targets (TabOrganizerCore, TabOrganizerAI, TabOrganizerStorage, TabOrganizerUI, TabOrganizerSafariAPI)
+- [X] T002 Create Xcode workspace TabOrganizer.xcworkspace linking Package.swift
+- [X] T003 Create Safari Extension target TabOrganizerExtension in Xcode project
+- [X] T004 [P] Configure Config/TabOrganizer.entitlements with Safari Extension permissions (tabs, windows, storage)
+- [X] T005 [P] Configure Config/Shared.xcconfig with build settings (Swift 6.1, strict concurrency, macOS 15.0+, iOS 18.0+)
+- [X] T006 Create Sources/TabOrganizerExtension/Info.plist with extension metadata and permissions
+- [X] T007 [P] Create .swiftlint.yml for code style enforcement
+- [X] T008 [P] Add swift-log dependency to Package.swift for logging
+- [X] T009 Create Tests directory structure (5 test targets matching library targets + integration tests)
 
 ---
 
