@@ -1,155 +1,187 @@
 import Foundation
 
-/// Represents a Safari tab tracked by the extension.
+/// Represents a Safari tab tracked by the extension
 ///
-/// Tab contains all metadata needed to identify, display, and analyze browser tabs.
-/// Tabs are ephemeral and tied to Safari's tab lifecycle - they exist only while
-/// the browser tab is open.
-public struct Tab: Identifiable, Codable, Sendable {
+/// Immutable value type safe for concurrent access.
+/// Private browsing tabs MUST be filtered before creating Tab instances.
+public struct Tab: Codable, Sendable, Identifiable, Equatable {
     /// Safari's internal tab identifier
     public let id: String
-    
+
     /// Tab's current URL
     public let url: URL
-    
+
     /// Page title
     public let title: String
-    
-    /// Extracted domain (e.g., "github.com" from "https://github.com/user/repo")
+
+    /// Extracted domain (e.g., "github.com")
     public let domain: String
-    
+
     /// Optional favicon URL for display
     public let faviconURL: URL?
-    
+
     /// Whether this tab is currently selected
     public let isActive: Bool
-    
+
     /// Whether this tab is pinned (excludes from rearrangement)
     public let isPinned: Bool
-    
-    /// Whether this tab is in private browsing mode
-    /// - Note: Private tabs MUST NOT be stored per Constitution Principle II
-    public let isPrivate: Bool
-    
+
     /// Timestamp of last user interaction with this tab
     public let lastViewedAt: Date
-    
+
     /// Optional reference to parent TabGroup
     public let groupID: UUID?
-    
-    /// Creates a new Tab with the specified properties
+
+    // MARK: - Initialization
+
+    /// Creates a new Tab instance
     ///
     /// - Parameters:
-    ///   - id: Safari tab identifier
-    ///   - url: Tab URL
-    ///   - title: Page title (defaults to URL string if empty)
-    ///   - domain: Extracted domain (auto-computed if nil)
+    ///   - id: Safari's internal tab identifier
+    ///   - url: Tab's current URL
+    ///   - title: Page title (defaults to URL if empty)
     ///   - faviconURL: Optional favicon URL
-    ///   - isActive: Whether tab is currently selected
-    ///   - isPinned: Whether tab is pinned
-    ///   - isPrivate: Whether tab is in private mode
-    ///   - lastViewedAt: Last interaction timestamp
-    ///   - groupID: Optional group membership
+    ///   - isActive: Whether currently selected (default: false)
+    ///   - isPinned: Whether pinned (default: false)
+    ///   - lastViewedAt: Last interaction timestamp (default: now)
+    ///   - groupID: Optional parent group ID
+    ///
+    /// ## Important
+    /// This initializer MUST NOT be called with private browsing tabs.
+    /// Private tabs should be filtered at the Safari API boundary.
     public init(
         id: String,
         url: URL,
         title: String? = nil,
-        domain: String? = nil,
         faviconURL: URL? = nil,
         isActive: Bool = false,
         isPinned: Bool = false,
-        isPrivate: Bool = false,
         lastViewedAt: Date = Date(),
         groupID: UUID? = nil
     ) {
         self.id = id
         self.url = url
         self.title = title?.isEmpty == false ? title! : url.absoluteString
-        self.domain = domain ?? url.host ?? url.absoluteString
+        self.domain = Self.extractDomain(from: url)
         self.faviconURL = faviconURL
         self.isActive = isActive
         self.isPinned = isPinned
-        self.isPrivate = isPrivate
         self.lastViewedAt = lastViewedAt
         self.groupID = groupID
     }
-    
-    /// Creates a copy of this tab assigned to a group
-    public func withGroup(_ groupID: UUID?) -> Tab {
+
+    // MARK: - Mutations (Value Semantics)
+
+    /// Returns a new Tab with updated URL and title
+    public func withNavigation(to url: URL, title: String?) -> Tab {
         Tab(
             id: id,
             url: url,
             title: title,
-            domain: domain,
             faviconURL: faviconURL,
             isActive: isActive,
             isPinned: isPinned,
-            isPrivate: isPrivate,
-            lastViewedAt: lastViewedAt,
-            groupID: groupID
-        )
-    }
-    
-    /// Creates a copy of this tab with updated lastViewedAt timestamp
-    public func withUpdatedViewTime() -> Tab {
-        Tab(
-            id: id,
-            url: url,
-            title: title,
-            domain: domain,
-            faviconURL: faviconURL,
-            isActive: isActive,
-            isPinned: isPinned,
-            isPrivate: isPrivate,
             lastViewedAt: Date(),
             groupID: groupID
         )
     }
-    
-    /// Calculates the duration since this tab was last viewed
-    public func inactiveDuration() -> TimeInterval {
-        return Date().timeIntervalSince(lastViewedAt)
+
+    /// Returns a new Tab with updated active state
+    public func withActive(_ active: Bool) -> Tab {
+        Tab(
+            id: id,
+            url: url,
+            title: title,
+            faviconURL: faviconURL,
+            isActive: active,
+            isPinned: isPinned,
+            lastViewedAt: active ? Date() : lastViewedAt,
+            groupID: groupID
+        )
     }
-    
-    /// Checks if this tab has been inactive for longer than the given threshold
-    public func isInactive(threshold: TimeInterval) -> Bool {
-        return inactiveDuration() > threshold
+
+    /// Returns a new Tab with updated group assignment
+    public func withGroup(_ newGroupID: UUID?) -> Tab {
+        Tab(
+            id: id,
+            url: url,
+            title: title,
+            faviconURL: faviconURL,
+            isActive: isActive,
+            isPinned: isPinned,
+            lastViewedAt: lastViewedAt,
+            groupID: newGroupID
+        )
+    }
+
+    /// Returns a new Tab with updated last viewed timestamp
+    public func withLastViewed(at timestamp: Date = Date()) -> Tab {
+        Tab(
+            id: id,
+            url: url,
+            title: title,
+            faviconURL: faviconURL,
+            isActive: isActive,
+            isPinned: isPinned,
+            lastViewedAt: timestamp,
+            groupID: groupID
+        )
+    }
+
+    // MARK: - Computed Properties
+
+    /// Whether this tab belongs to a group
+    public var isGrouped: Bool {
+        groupID != nil
+    }
+
+    /// Time since last view
+    public var timeSinceLastView: TimeInterval {
+        Date().timeIntervalSince(lastViewedAt)
+    }
+
+    /// Whether tab is considered inactive (not viewed in 30+ minutes)
+    public func isInactive(threshold: TimeInterval = 30 * 60) -> Bool {
+        timeSinceLastView > threshold
+    }
+
+    /// Formatted display title (truncated if too long)
+    public func displayTitle(maxLength: Int = 50) -> String {
+        if title.count <= maxLength {
+            return title
+        }
+        let truncated = title.prefix(maxLength - 3)
+        return "\(truncated)..."
+    }
+
+    // MARK: - Domain Extraction
+
+    /// Extracts domain from URL
+    private static func extractDomain(from url: URL) -> String {
+        url.host ?? ""
+    }
+
+    /// Whether this tab is from the same domain as another
+    public func isSameDomain(as other: Tab) -> Bool {
+        !domain.isEmpty && domain == other.domain
     }
 }
 
-/// Extension providing computed properties for tab analysis
-public extension Tab {
-    /// URL path components for similarity analysis
-    var pathComponents: [String] {
-        url.pathComponents.filter { $0 != "/" }
-    }
-    
-    /// URL scheme (http, https, etc.)
-    var scheme: String {
-        url.scheme ?? ""
-    }
-    
-    /// Combined text for keyword extraction (title + domain)
-    var searchableText: String {
-        "\(title) \(domain)"
-    }
-    
-    /// Display name prioritizing title over URL
-    var displayName: String {
-        title.isEmpty ? url.absoluteString : title
-    }
-}
+// MARK: - Convenience Extensions
 
-// MARK: - Hashable & Equatable
-
-extension Tab: Hashable {
-    /// Hash based on ID only for Set/Dictionary usage
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-    
-    /// Equality based on ID only
-    public static func == (lhs: Tab, rhs: Tab) -> Bool {
-        lhs.id == rhs.id
+extension Tab {
+    /// Creates a sample tab for testing/previews
+    public static func sample(
+        id: String = "sample-tab",
+        urlString: String = "https://github.com",
+        title: String = "GitHub",
+        isActive: Bool = false
+    ) -> Tab {
+        Tab(
+            id: id,
+            url: URL(string: urlString)!,
+            title: title,
+            isActive: isActive
+        )
     }
 }

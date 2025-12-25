@@ -1,43 +1,90 @@
 import Foundation
 
-/// Protocol for tab manipulation operations.
+/// Protocol for managing Safari tabs
 ///
-/// This protocol abstracts Safari Extension tab APIs to enable testability
-/// through dependency injection. Production implementations call real Safari APIs,
-/// while test implementations provide controllable mock behavior.
+/// Provides an abstraction over Safari Extension APIs for tab manipulation,
+/// enabling testability through mock implementations.
+///
+/// ## Thread Safety
+/// All methods are async and can be called from any context.
+/// Implementations must handle Safari API calls on the main thread internally.
+///
+/// ## Privacy
+/// Implementations MUST exclude private browsing tabs from all operations.
 @MainActor
 public protocol TabManaging: Sendable {
-    /// Retrieve all tabs in the active Safari window.
+    /// Retrieves all non-private tabs from all Safari windows
     ///
-    /// - Returns: Array of TabInfo structures containing tab metadata
-    /// - Throws: TabAPIError on permission, availability, or API issues
-    /// - Note: Automatically filters out private browsing tabs
+    /// - Returns: Array of `TabInfo` for all accessible tabs, excluding private tabs
+    /// - Throws: `TabAPIError.permissionDenied` if tab access is not granted
+    /// - Throws: `TabAPIError.safariUnavailable` if Safari Extension APIs are unavailable
+    ///
+    /// ## Pre-conditions
+    /// - Safari Extension permissions granted for tab access
+    ///
+    /// ## Post-conditions
+    /// - Returned tabs are from non-private windows only
+    /// - Tab order matches Safari's native ordering
     func getAllTabs() async throws -> [TabInfo]
-    
-    /// Make the specified tab active (bring to foreground).
+
+    /// Retrieves tabs from a specific Safari window
     ///
-    /// - Parameter id: Safari tab identifier from TabInfo.id
-    /// - Throws: TabAPIError if tab not found or permission denied
-    func activateTab(id: String) async throws
-    
-    /// Close the specified tab.
+    /// - Parameter windowID: Unique identifier for the Safari window
+    /// - Returns: Array of `TabInfo` for tabs in the specified window
+    /// - Throws: `TabAPIError.windowNotFound` if window doesn't exist
+    /// - Throws: `TabAPIError.permissionDenied` if access is not granted
     ///
-    /// - Parameter id: Safari tab identifier from TabInfo.id
-    /// - Throws: TabAPIError if tab not found or is last tab
-    func closeTab(id: String) async throws
-    
-    /// Open a new tab with the specified URL.
+    /// ## Pre-conditions
+    /// - Window with `windowID` exists and is accessible
     ///
-    /// - Parameter url: URL to open in the new tab
-    /// - Returns: ID of the newly created tab
-    /// - Throws: TabAPIError on permission or API issues
-    func openTab(url: URL) async throws -> String
-    
-    /// Move a tab to a specific index in the tab bar.
+    /// ## Post-conditions
+    /// - Returns empty array if window has no tabs or is private
+    func getTabs(windowID: String) async throws -> [TabInfo]
+
+    /// Closes a tab by its identifier
+    ///
+    /// - Parameter tabID: Unique identifier for the tab to close
+    /// - Throws: `TabAPIError.tabNotFound` if tab doesn't exist
+    /// - Throws: `TabAPIError.permissionDenied` if access is not granted
+    ///
+    /// ## Pre-conditions
+    /// - Tab with `tabID` exists and is closeable
+    ///
+    /// ## Post-conditions
+    /// - Tab is removed from Safari
+    /// - Tab's window remains open (even if last tab)
+    func closeTab(tabID: String) async throws
+
+    /// Activates (selects) a tab by its identifier
+    ///
+    /// - Parameter tabID: Unique identifier for the tab to activate
+    /// - Throws: `TabAPIError.tabNotFound` if tab doesn't exist
+    /// - Throws: `TabAPIError.permissionDenied` if access is not granted
+    ///
+    /// ## Pre-conditions
+    /// - Tab with `tabID` exists and is activatable
+    ///
+    /// ## Post-conditions
+    /// - Tab is brought to foreground
+    /// - Tab's window is brought to foreground
+    func activateTab(tabID: String) async throws
+
+    /// Moves a tab to a new position within the same window
     ///
     /// - Parameters:
-    ///   - tabID: ID of the tab to move
-    ///   - index: Target position in the tab bar (0-based)
-    /// - Throws: TabAPIError if tab not found or index invalid
-    func moveTab(id: String, toIndex index: Int) async throws
+    ///   - tabID: Unique identifier for the tab to move
+    ///   - index: Target position (0-based index)
+    /// - Throws: `TabAPIError.tabNotFound` if tab doesn't exist
+    /// - Throws: `TabAPIError.invalidIndex` if index is out of bounds
+    /// - Throws: `TabAPIError.permissionDenied` if access is not granted
+    ///
+    /// ## Pre-conditions
+    /// - Tab with `tabID` exists
+    /// - `index` is within valid range [0, tabCount]
+    /// - Tab is not pinned (pinned tabs cannot be moved)
+    ///
+    /// ## Post-conditions
+    /// - Tab is at position `index`
+    /// - Other tabs shift to accommodate
+    func moveTab(tabID: String, toIndex index: Int) async throws
 }

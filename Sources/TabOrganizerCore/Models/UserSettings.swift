@@ -1,153 +1,248 @@
 import Foundation
 
-/// Represents user preferences and feature toggles.
+/// User preferences and feature toggles
 ///
-/// UserSettings is a singleton entity that persists user configuration across sessions.
-public struct UserSettings: Codable, Sendable {
-    /// Unique identifier (singleton per user)
-    public let id: UUID
-    
-    /// Cleanup threshold in seconds (default: 1800 = 30 minutes)
-    public var inactivityThreshold: TimeInterval
-    
-    /// Whether to highlight related tabs (default: true)
-    public var contextHighlightingEnabled: Bool
-    
-    /// Whether to auto-move related tabs (default: false)
-    public var autoRearrangementEnabled: Bool
-    
-    /// Whether to auto-close inactive tabs (default: false)
-    public var autoCleanupEnabled: Bool
-    
-    /// Optional criteria for auto-cleanup
-    public var autoCleanupCriteria: CleanupCriteria?
-    
-    /// Map of action to keyboard shortcut
-    public var keyboardShortcuts: [String: String]
-    
-    /// Map of privacy consent types
-    public var privacyConsents: [String: Bool]
-    
-    /// Last settings backup timestamp
-    public var lastBackupAt: Date?
-    
-    /// Settings schema version (for future migrations)
-    public let version: Int
-    
-    /// Default inactivity threshold (30 minutes)
-    public static let defaultInactivityThreshold: TimeInterval = 1800
-    
-    /// Minimum allowed inactivity threshold (15 minutes)
-    public static let minInactivityThreshold: TimeInterval = 900
-    
-    /// Maximum allowed inactivity threshold (4 hours)
-    public static let maxInactivityThreshold: TimeInterval = 14400
-    
-    /// Current settings schema version
-    public static let currentVersion = 1
-    
-    /// Creates a new UserSettings with default values
+/// Immutable value type storing all user-configurable settings.
+/// Safe for concurrent access across actors.
+public struct UserSettings: Codable, Sendable, Equatable {
+
+    // MARK: - Feature Toggles
+
+    /// Whether context-aware tab highlighting is enabled
+    public let contextHighlightingEnabled: Bool
+
+    /// Whether automatic tab rearrangement is enabled
+    public let autoRearrangementEnabled: Bool
+
+    /// Whether intelligent cleanup suggestions are enabled
+    public let cleanupSuggestionsEnabled: Bool
+
+    // MARK: - Cleanup Configuration
+
+    /// Inactivity threshold in seconds (default: 30 minutes)
+    public let inactivityThreshold: TimeInterval
+
+    /// Whether to auto-close tabs matching cleanup criteria
+    public let autoCloseEnabled: Bool
+
+    /// Whether to auto-close only ungrouped tabs
+    public let autoCloseUngroupedOnly: Bool
+
+    // MARK: - UI Preferences
+
+    /// Preferred theme for the extension UI
+    public let theme: Theme
+
+    /// Whether to show tab favicons
+    public let showFavicons: Bool
+
+    /// Whether to show tab counts on groups
+    public let showTabCounts: Bool
+
+    // MARK: - Privacy Preferences
+
+    /// Whether user has consented to on-device AI analysis
+    public let aiAnalysisConsent: Bool
+
+    /// Whether to exclude specific domains from AI analysis
+    public let excludedDomains: [String]
+
+    // MARK: - Types
+
+    public enum Theme: String, Codable, Sendable {
+        case light
+        case dark
+        case system
+    }
+
+    // MARK: - Validation Errors
+
+    public enum ValidationError: Error, LocalizedError {
+        case invalidThreshold(value: TimeInterval, validRange: ClosedRange<TimeInterval>)
+
+        public var errorDescription: String? {
+            switch self {
+            case .invalidThreshold(let value, let validRange):
+                return "Invalid inactivity threshold: \(value) seconds. Must be between \(validRange.lowerBound) and \(validRange.upperBound) seconds."
+            }
+        }
+    }
+
+    // MARK: - Constants
+
+    /// Valid range for inactivity threshold (15 minutes to 4 hours)
+    public static let inactivityThresholdRange: ClosedRange<TimeInterval> = (15 * 60)...(4 * 60 * 60)
+
+    // MARK: - Defaults
+
+    /// Default user settings
+    public static let `default` = UserSettings(
+        contextHighlightingEnabled: true,
+        autoRearrangementEnabled: false,
+        cleanupSuggestionsEnabled: true,
+        inactivityThreshold: 30 * 60, // 30 minutes
+        autoCloseEnabled: false,
+        autoCloseUngroupedOnly: true,
+        theme: .system,
+        showFavicons: true,
+        showTabCounts: true,
+        aiAnalysisConsent: false,
+        excludedDomains: []
+    )
+
+    // MARK: - Initialization
+
+    /// Creates user settings
+    ///
+    /// - Parameters:
+    ///   - contextHighlightingEnabled: Enable context highlighting
+    ///   - autoRearrangementEnabled: Enable auto-rearrangement
+    ///   - cleanupSuggestionsEnabled: Enable cleanup suggestions
+    ///   - inactivityThreshold: Inactivity threshold (15min to 4hrs)
+    ///   - autoCloseEnabled: Enable auto-close
+    ///   - autoCloseUngroupedOnly: Auto-close only ungrouped tabs
+    ///   - theme: UI theme preference
+    ///   - showFavicons: Show favicons in UI
+    ///   - showTabCounts: Show tab counts on groups
+    ///   - aiAnalysisConsent: User consent for AI analysis
+    ///   - excludedDomains: Domains to exclude from AI
+    /// - Throws: `ValidationError` if validation fails
     public init(
-        id: UUID = UUID(),
-        inactivityThreshold: TimeInterval = UserSettings.defaultInactivityThreshold,
         contextHighlightingEnabled: Bool = true,
         autoRearrangementEnabled: Bool = false,
-        autoCleanupEnabled: Bool = false,
-        autoCleanupCriteria: CleanupCriteria? = nil,
-        keyboardShortcuts: [String: String] = [:],
-        privacyConsents: [String: Bool] = [:],
-        lastBackupAt: Date? = nil,
-        version: Int = UserSettings.currentVersion
-    ) {
-        self.id = id
-        self.inactivityThreshold = inactivityThreshold
+        cleanupSuggestionsEnabled: Bool = true,
+        inactivityThreshold: TimeInterval = 30 * 60,
+        autoCloseEnabled: Bool = false,
+        autoCloseUngroupedOnly: Bool = true,
+        theme: Theme = .system,
+        showFavicons: Bool = true,
+        showTabCounts: Bool = true,
+        aiAnalysisConsent: Bool = false,
+        excludedDomains: [String] = []
+    ) throws {
+        // Validate inactivity threshold
+        guard Self.inactivityThresholdRange.contains(inactivityThreshold) else {
+            throw ValidationError.invalidThreshold(
+                value: inactivityThreshold,
+                validRange: Self.inactivityThresholdRange
+            )
+        }
+
         self.contextHighlightingEnabled = contextHighlightingEnabled
         self.autoRearrangementEnabled = autoRearrangementEnabled
-        self.autoCleanupEnabled = autoCleanupEnabled
-        self.autoCleanupCriteria = autoCleanupCriteria
-        self.keyboardShortcuts = keyboardShortcuts
-        self.privacyConsents = privacyConsents
-        self.lastBackupAt = lastBackupAt
-        self.version = version
+        self.cleanupSuggestionsEnabled = cleanupSuggestionsEnabled
+        self.inactivityThreshold = inactivityThreshold
+        self.autoCloseEnabled = autoCloseEnabled
+        self.autoCloseUngroupedOnly = autoCloseUngroupedOnly
+        self.theme = theme
+        self.showFavicons = showFavicons
+        self.showTabCounts = showTabCounts
+        self.aiAnalysisConsent = aiAnalysisConsent
+        self.excludedDomains = excludedDomains
     }
-    
-    /// Creates default settings for a new user
-    public static func defaultSettings() -> UserSettings {
-        UserSettings(
-            privacyConsents: [
-                "tabTracking": true,
-                "contextAnalysis": true
-            ]
+
+    // MARK: - Mutations (Value Semantics)
+
+    /// Returns settings with updated context highlighting toggle
+    public func withContextHighlighting(_ enabled: Bool) throws -> UserSettings {
+        try UserSettings(
+            contextHighlightingEnabled: enabled,
+            autoRearrangementEnabled: autoRearrangementEnabled,
+            cleanupSuggestionsEnabled: cleanupSuggestionsEnabled,
+            inactivityThreshold: inactivityThreshold,
+            autoCloseEnabled: autoCloseEnabled,
+            autoCloseUngroupedOnly: autoCloseUngroupedOnly,
+            theme: theme,
+            showFavicons: showFavicons,
+            showTabCounts: showTabCounts,
+            aiAnalysisConsent: aiAnalysisConsent,
+            excludedDomains: excludedDomains
         )
     }
-    
-    /// Validates the settings against business rules
-    ///
-    /// - Throws: `SettingsValidationError` if any validation rule fails
-    public func validate() throws {
-        // Inactivity threshold must be within allowed range
-        guard inactivityThreshold >= UserSettings.minInactivityThreshold else {
-            throw SettingsValidationError.thresholdTooLow(
-                min: UserSettings.minInactivityThreshold
-            )
-        }
-        
-        guard inactivityThreshold <= UserSettings.maxInactivityThreshold else {
-            throw SettingsValidationError.thresholdTooHigh(
-                max: UserSettings.maxInactivityThreshold
-            )
-        }
-        
-        // Auto-rearrangement requires context highlighting
-        if autoRearrangementEnabled && !contextHighlightingEnabled {
-            throw SettingsValidationError.invalidDependency(
-                feature: "autoRearrangement",
-                requires: "contextHighlighting"
-            )
-        }
-        
-        // Auto-cleanup requires cleanup criteria
-        if autoCleanupEnabled && autoCleanupCriteria == nil {
-            throw SettingsValidationError.missingRequiredSetting(
-                feature: "autoCleanup",
-                setting: "autoCleanupCriteria"
-            )
-        }
+
+    /// Returns settings with updated auto-rearrangement toggle
+    public func withAutoRearrangement(_ enabled: Bool) throws -> UserSettings {
+        try UserSettings(
+            contextHighlightingEnabled: contextHighlightingEnabled,
+            autoRearrangementEnabled: enabled,
+            cleanupSuggestionsEnabled: cleanupSuggestionsEnabled,
+            inactivityThreshold: inactivityThreshold,
+            autoCloseEnabled: autoCloseEnabled,
+            autoCloseUngroupedOnly: autoCloseUngroupedOnly,
+            theme: theme,
+            showFavicons: showFavicons,
+            showTabCounts: showTabCounts,
+            aiAnalysisConsent: aiAnalysisConsent,
+            excludedDomains: excludedDomains
+        )
     }
-}
 
-/// Criteria for automatic tab cleanup
-public enum CleanupCriteria: String, Codable, Sendable {
-    /// Only close tabs not in any group
-    case ungroupedOnly
-    
-    /// Close all inactive tabs
-    case allInactive
-    
-    /// Close inactive except pinned
-    case excludePinned
-    
-    /// Close inactive except whitelisted domains
-    case excludeSpecificDomains
-}
+    /// Returns settings with updated inactivity threshold
+    public func withInactivityThreshold(_ threshold: TimeInterval) throws -> UserSettings {
+        try UserSettings(
+            contextHighlightingEnabled: contextHighlightingEnabled,
+            autoRearrangementEnabled: autoRearrangementEnabled,
+            cleanupSuggestionsEnabled: cleanupSuggestionsEnabled,
+            inactivityThreshold: threshold,
+            autoCloseEnabled: autoCloseEnabled,
+            autoCloseUngroupedOnly: autoCloseUngroupedOnly,
+            theme: theme,
+            showFavicons: showFavicons,
+            showTabCounts: showTabCounts,
+            aiAnalysisConsent: aiAnalysisConsent,
+            excludedDomains: excludedDomains
+        )
+    }
 
-/// Validation errors for UserSettings
-public enum SettingsValidationError: Error, LocalizedError, Sendable {
-    case thresholdTooLow(min: TimeInterval)
-    case thresholdTooHigh(max: TimeInterval)
-    case invalidDependency(feature: String, requires: String)
-    case missingRequiredSetting(feature: String, setting: String)
-    
-    public var errorDescription: String? {
-        switch self {
-        case .thresholdTooLow(let min):
-            return "Inactivity threshold must be at least \(Int(min / 60)) minutes"
-        case .thresholdTooHigh(let max):
-            return "Inactivity threshold cannot exceed \(Int(max / 3600)) hours"
-        case .invalidDependency(let feature, let requires):
-            return "\(feature) requires \(requires) to be enabled"
-        case .missingRequiredSetting(let feature, let setting):
-            return "\(feature) requires \(setting) to be configured"
+    /// Returns settings with updated theme
+    public func withTheme(_ newTheme: Theme) throws -> UserSettings {
+        try UserSettings(
+            contextHighlightingEnabled: contextHighlightingEnabled,
+            autoRearrangementEnabled: autoRearrangementEnabled,
+            cleanupSuggestionsEnabled: cleanupSuggestionsEnabled,
+            inactivityThreshold: inactivityThreshold,
+            autoCloseEnabled: autoCloseEnabled,
+            autoCloseUngroupedOnly: autoCloseUngroupedOnly,
+            theme: newTheme,
+            showFavicons: showFavicons,
+            showTabCounts: showTabCounts,
+            aiAnalysisConsent: aiAnalysisConsent,
+            excludedDomains: excludedDomains
+        )
+    }
+
+    /// Returns settings with updated AI consent
+    public func withAIConsent(_ consent: Bool) throws -> UserSettings {
+        try UserSettings(
+            contextHighlightingEnabled: contextHighlightingEnabled,
+            autoRearrangementEnabled: autoRearrangementEnabled,
+            cleanupSuggestionsEnabled: cleanupSuggestionsEnabled,
+            inactivityThreshold: inactivityThreshold,
+            autoCloseEnabled: autoCloseEnabled,
+            autoCloseUngroupedOnly: autoCloseUngroupedOnly,
+            theme: theme,
+            showFavicons: showFavicons,
+            showTabCounts: showTabCounts,
+            aiAnalysisConsent: consent,
+            excludedDomains: excludedDomains
+        )
+    }
+
+    // MARK: - Computed Properties
+
+    /// Formatted inactivity threshold for display
+    public var inactivityThresholdFormatted: String {
+        let minutes = Int(inactivityThreshold / 60)
+        if minutes < 60 {
+            return "\(minutes) minutes"
+        } else {
+            let hours = minutes / 60
+            let remainingMinutes = minutes % 60
+            if remainingMinutes == 0 {
+                return "\(hours) hour\(hours == 1 ? "" : "s")"
+            } else {
+                return "\(hours)h \(remainingMinutes)m"
+            }
         }
     }
 }

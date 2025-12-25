@@ -5,6 +5,19 @@
 **Status**: Draft
 **Input**: User description: "Create an AI-powered safari extension for organization (via tab groups) and cleanup of tabs. Support advanced features such as rearranging/highlighting tabs based on context, e.g. automatically moving/highlighting tabs with similar purpose and content when a tab is selected."
 
+## Clarifications
+
+### Session 2025-12-25
+
+- Q: How should AI grouping explanations (FR-008) be displayed in the UI? → A: Tooltip on hover over group name
+- Q: What should happen when analyzing >50 tabs (FR-012 threshold)? → A: Disable AI suggestions, require manual grouping, prompt user to cleanup/consolidate tabs
+- Q: What should happen if auto-rearrangement exceeds the 1-second timeout (FR-021)? → A: Cancel rearrangement, show notification, keep current state
+- Q: How should users specify tab types for auto-closing (e.g., MFA popups)? → A: Predefined categories (Auth, Shopping, Social, etc.) determined by domain pattern matching + AI pattern recognition
+- Q: How should dynamic groups be converted to Safari native tab groups? → A: "Convert to Native" button in group header + emoji prefix on first tab, triggered by double-click
+- Q: How should duplicate native tab groups be handled during conversion? → A: Merge into existing native group if name/content is similar
+- Q: How should new tabs be assigned to groups automatically? → A: Auto-assign based on domain + AI analysis (on-demand)
+- Q: When should ML/AI be used vs cached domain mappings? → A: ML only for unknown domains; use cached domain→category mappings for known sites
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Manual Tab Group Organization (Priority: P1)
@@ -92,6 +105,62 @@ The extension identifies tabs that haven't been viewed in a configurable time pe
 
 ---
 
+### User Story 6 - Category-Based Auto-Close (Priority: P6)
+
+Users can configure automatic closure of specific tab categories (Auth/MFA, Shopping Confirmations, Social Media, etc.) based on predefined patterns and AI recognition. This provides hands-free cleanup of transient workflow tabs.
+
+**Why this priority**: Reduces manual cleanup burden for known-transient tab types. MFA popups and confirmation pages typically have no long-term value. Complements P5's time-based cleanup with category-based intelligence.
+
+**Independent Test**: Can be tested by enabling "Auth/MFA" auto-close, opening an authentication popup (e.g., Google Sign-In), completing authentication, and verifying the popup tab automatically closes within 5 seconds of workflow completion.
+
+**Acceptance Scenarios**:
+
+1. **Given** I have "Auth/MFA" category enabled for auto-close, **When** I complete a multi-factor authentication flow in a popup tab, **Then** the auth popup tab closes automatically within 5 seconds
+2. **Given** I have "Shopping Confirmations" category enabled, **When** I complete a purchase and see an order confirmation page, **Then** the confirmation tab closes automatically after 10 seconds
+3. **Given** I want to customize auto-close categories, **When** I open extension settings and enable/disable specific categories (Auth, Shopping, Social, Forms), **Then** only enabled categories trigger auto-close behavior
+4. **Given** a tab matches multiple categories, **When** the system detects conflicting rules (e.g., "Keep Social" vs "Close Social after 30min"), **Then** the most specific/conservative rule takes precedence (Keep wins over Close)
+5. **Given** I want to see what was auto-closed, **When** I check the cleanup history, **Then** I see category-based closures listed separately with category labels and restoration option
+
+---
+
+### User Story 7 - Native Tab Group Conversion (Priority: P7)
+
+Users can convert extension-managed dynamic tab groups into Safari's native tab groups for permanent organization. Native groups display with emoji prefixes and persist independently of the extension.
+
+**Why this priority**: Provides exit strategy and interoperability with Safari's native features. Users who find a stable grouping can "freeze" it into a native group. Lower priority as it's a convenience feature for power users.
+
+**Independent Test**: Can be tested by creating a dynamic group "Work" with 5 tabs, double-clicking the group header to trigger conversion, and verifying Safari creates a native tab group with emoji prefix (e.g., 🔗 Work) and tabs are moved to native group.
+
+**Acceptance Scenarios**:
+
+1. **Given** I have a dynamic group "Research" with 8 tabs, **When** I double-click the group header, **Then** Safari creates a native tab group named "🔗 Research" and all 8 tabs are moved into it
+2. **Given** I have a dynamic group "Work" and an existing native tab group "Work" with similar content, **When** I convert the dynamic group to native, **Then** the system merges tabs into the existing "Work" group rather than creating a duplicate
+3. **Given** I have converted a group to native, **When** I view my tab bar, **Then** the first tab in the native group shows an emoji prefix (e.g., 🔗) indicating it was created by the extension
+4. **Given** I have a native group created by the extension, **When** I close and reopen Safari, **Then** the native group persists independently (extension not required)
+5. **Given** I want to manage native groups, **When** I add/remove tabs from a native group in Safari, **Then** the extension no longer manages that group (it's fully native)
+6. **Given** I have many dynamic groups, **When** I use "Convert All to Native" option, **Then** all current dynamic groups are converted to native groups, merging into existing native groups where name/content is similar
+
+---
+
+### User Story 8 - Automatic Tab Assignment (Priority: P8)
+
+When a new tab opens, the extension automatically assigns it to the most relevant existing group based on domain matching and cached AI category mappings. This provides seamless organization without manual intervention.
+
+**Why this priority**: Reduces ongoing manual organization burden. Once groups are established, new tabs automatically flow into appropriate groups. Lower priority as it requires mature AI/domain mapping system.
+
+**Independent Test**: Can be tested by creating groups "Development" (with GitHub, StackOverflow tabs) and "Shopping" (with Amazon, eBay tabs), then opening a new GitHub tab and verifying it auto-assigns to "Development" group.
+
+**Acceptance Scenarios**:
+
+1. **Given** I have a "Development" group containing github.com and stackoverflow.com tabs, **When** I open a new github.com tab, **Then** the new tab is automatically assigned to the "Development" group
+2. **Given** I have established groups and open a tab from an unknown domain, **When** the AI analyzes the new tab's content, **Then** the tab is assigned to the most similar group based on category/keyword matching
+3. **Given** a domain has been analyzed and mapped to a category (e.g., reddit.com → Social), **When** I open another reddit.com tab, **Then** the system uses the cached mapping without re-running AI analysis
+4. **Given** I open a new tab that doesn't match any existing group, **When** the system cannot find a confident match (similarity < 70%), **Then** the tab remains ungrouped rather than being misassigned
+5. **Given** I have both dynamic and native groups, **When** I open a new tab, **Then** the system assigns to dynamic groups only (native groups are user-managed)
+6. **Given** I want to disable auto-assignment, **When** I toggle "Auto-assign new tabs" off in settings, **Then** new tabs remain ungrouped until manually organized
+
+---
+
 ### Edge Cases
 
 - What happens when a user has 200+ tabs open and triggers AI grouping? (Performance, timeout handling)
@@ -104,6 +173,11 @@ The extension identifies tabs that haven't been viewed in a configurable time pe
 - How does the system handle tabs in private browsing mode differently?
 - What happens when multiple tab groups have identical names?
 - How does cleanup handle tabs with unsaved form data?
+- What happens if a user tries to convert a group to native but Safari's native tab group API fails?
+- How does the system handle category detection when a tab matches multiple categories with conflicting rules?
+- What happens if workflow completion detection fails (e.g., auth popup doesn't close automatically)?
+- How does the extension handle tabs that are part of native groups created outside the extension?
+- What happens when a user manually closes a tab that was scheduled for category-based auto-close?
 
 ## Requirements *(mandatory)*
 
@@ -121,11 +195,11 @@ The extension identifies tabs that haven't been viewed in a configurable time pe
 #### AI Analysis & Suggestions
 
 - **FR-007**: System MUST analyze tab metadata (title, URL, domain) to generate grouping suggestions
-- **FR-008**: System MUST provide explanations for why tabs were grouped together (e.g., "Same domain", "Similar keywords: Swift, iOS, development")
+- **FR-008**: System MUST provide explanations for why tabs were grouped together (e.g., "Same domain", "Similar keywords: Swift, iOS, development") displayed as a tooltip on hover over the group name
 - **FR-009**: System MUST allow users to preview AI suggestions before applying them
 - **FR-010**: System MUST support manual editing of AI-suggested groups before acceptance
 - **FR-011**: System MUST handle analysis failures gracefully with fallback to manual grouping
-- **FR-012**: System MUST complete analysis and suggestions within 5 seconds for up to 50 tabs
+- **FR-012**: System MUST complete analysis and suggestions within 5 seconds for up to 50 tabs. When >50 tabs are open, system MUST disable AI suggestions, display a prompt encouraging users to cleanup/consolidate tabs first, and require manual grouping
 
 #### Context Highlighting
 
@@ -140,7 +214,7 @@ The extension identifies tabs that haven't been viewed in a configurable time pe
 - **FR-018**: System MUST move highlighted tabs adjacent to the selected tab when auto-rearrange is enabled
 - **FR-019**: System MUST respect pinned tabs by excluding them from rearrangement
 - **FR-020**: System MUST preserve relative order of rearranged tabs (maintain their original sequence)
-- **FR-021**: System MUST complete rearrangement within 1 second to avoid jarring UX
+- **FR-021**: System MUST complete rearrangement within 1 second to avoid jarring UX. If timeout is exceeded, system MUST cancel the rearrangement operation, display a notification to the user, and maintain the current tab state
 - **FR-022**: System MUST provide undo capability for recent rearrangements
 
 #### Tab Cleanup
@@ -151,6 +225,38 @@ The extension identifies tabs that haven't been viewed in a configurable time pe
 - **FR-026**: System MUST provide "Keep" marking to exclude specific tabs from cleanup suggestions
 - **FR-027**: System MUST support configurable auto-close for tabs matching specific criteria (e.g., ungrouped tabs only)
 - **FR-028**: System MUST maintain cleanup history for undo functionality (last 24 hours)
+
+#### Category-Based Auto-Close
+
+- **FR-038**: System MUST support predefined tab categories for auto-close: Auth/MFA, Shopping Confirmations, Social Media, Form Submissions
+- **FR-039**: System MUST use domain pattern matching to identify tab categories (e.g., "*://accounts.*.com/signin*" for Auth)
+- **FR-040**: System MUST use AI pattern recognition to supplement domain patterns for category detection
+- **FR-041**: System MUST allow users to enable/disable auto-close per category independently in settings
+- **FR-042**: System MUST detect workflow completion states (e.g., successful authentication, order confirmation) before triggering auto-close
+- **FR-043**: System MUST auto-close Auth/MFA tabs within 5 seconds of workflow completion
+- **FR-044**: System MUST auto-close Shopping Confirmation tabs within 10 seconds of detection
+- **FR-045**: System MUST apply conservative precedence rules when tabs match multiple categories (Keep wins over Close)
+- **FR-046**: System MUST log category-based auto-closures in cleanup history with category labels for restoration
+
+#### Native Tab Group Integration
+
+- **FR-047**: System MUST provide "Convert to Native" functionality triggered by double-clicking group header
+- **FR-048**: System MUST create Safari native tab groups with emoji prefix (🔗) when converting dynamic groups
+- **FR-049**: System MUST preserve group name and all tab memberships during native conversion
+- **FR-050**: System MUST remove extension management from groups after native conversion (fully native thereafter)
+- **FR-051**: System MUST provide "Convert All to Native" bulk operation for all dynamic groups
+- **FR-052**: System MUST ensure native groups persist independently of extension (survive extension disable/uninstall)
+
+#### Automatic Tab Assignment
+
+- **FR-053**: System MUST automatically assign new tabs to existing dynamic groups based on domain matching
+- **FR-054**: System MUST use cached domain→category mappings for known domains without re-running AI analysis
+- **FR-055**: System MUST run AI analysis for unknown domains to determine category and group assignment
+- **FR-056**: System MUST require minimum 70% similarity confidence before auto-assigning to a group
+- **FR-057**: System MUST leave tabs ungrouped when no confident match exists (similarity < 70%)
+- **FR-058**: System MUST assign to dynamic groups only (exclude native groups from auto-assignment)
+- **FR-059**: System MUST provide user setting to enable/disable automatic tab assignment
+- **FR-060**: System MUST cache domain→category mappings to improve performance and reduce AI computation
 
 #### Privacy & Security
 
@@ -169,11 +275,12 @@ The extension identifies tabs that haven't been viewed in a configurable time pe
 
 ### Key Entities
 
-- **TabGroup**: Represents a named collection of tabs with properties (name, color, collapsed state, creation timestamp). Contains references to Tab IDs. Persists across sessions.
-- **Tab**: Represents a Safari tab with properties (URL, title, domain, last viewed timestamp, pinned status, group membership). Tracked for context analysis and cleanup decisions.
+- **TabGroup**: Represents a named collection of tabs with properties (name, color, collapsed state, creation timestamp, isNative flag). Contains references to Tab IDs. Persists across sessions.
+- **Tab**: Represents a Safari tab with properties (URL, title, domain, last viewed timestamp, pinned status, group membership, category). Tracked for context analysis and cleanup decisions.
 - **ContextAnalysis**: Represents the AI's understanding of tab relationships with properties (similarity score, matching criteria, keywords, category). Generated on-demand for highlighting/grouping.
-- **CleanupSuggestion**: Represents a recommendation to close tabs with properties (suggested tab IDs, inactivity duration, user decision history). Used for cleanup workflow.
-- **UserSettings**: Represents user preferences with properties (feature toggles, thresholds, keyboard shortcuts, privacy consents). Persists locally.
+- **CleanupSuggestion**: Represents a recommendation to close tabs with properties (suggested tab IDs, inactivity duration, user decision history, closure reason - time-based or category-based). Used for cleanup workflow.
+- **UserSettings**: Represents user preferences with properties (feature toggles, thresholds, keyboard shortcuts, privacy consents, auto-close category settings). Persists locally.
+- **TabCategory**: Represents a predefined category for auto-close with properties (name, domain patterns, AI detection rules, auto-close delay, enabled status). Categories: Auth/MFA, Shopping, Social, Forms.
 
 ## Success Criteria *(mandatory)*
 

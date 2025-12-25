@@ -1,0 +1,10 @@
+{
+	"permissions": {
+		"allow": ["SlashCommand(/speckit.constitution)"]
+	},
+	"settings": {
+		"theme": "dark",
+		"font": "monospace",
+		"fontSize": 14
+	}
+}

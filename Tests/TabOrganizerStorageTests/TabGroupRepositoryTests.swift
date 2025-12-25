@@ -1,211 +1,398 @@
+//
+//  TabGroupRepositoryTests.swift
+//  TabOrganizerStorageTests
+//
+//  Tests for TabGroupRepository implementations.
+//  Verifies CRUD operations, duplicate name prevention, and reactive observation.
+//
+
 import Testing
 import Foundation
+import TabOrganizerCore
 @testable import TabOrganizerStorage
-@testable import TabOrganizerCore
 
+/// Tests for TabGroupRepository protocol implementations.
 @Suite("TabGroupRepository Tests")
+@MainActor
 struct TabGroupRepositoryTests {
-    
+
+    // MARK: - Test Fixtures
+
+    func makeSampleGroup(name: String = "Work", tabIDs: [String] = ["tab-1", "tab-2"]) -> TabGroup {
+        TabGroup(
+            id: UUID(),
+            name: name,
+            color: "#0066CC",
+            collapsed: false,
+            createdAt: Date(),
+            updatedAt: Date(),
+            tabIDs: tabIDs,
+            metadata: [:]
+        )
+    }
+
+    // MARK: - Save Tests
+
     @Test("Save creates new group")
-    func testSaveCreatesNewGroup() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let group = TabGroup(name: "Work", tabIDs: ["tab-1", "tab-2"])
-        
-        try await repository.save(group)
-        
-        let retrieved = try await repository.get(id: group.id)
-        #expect(retrieved != nil)
-        #expect(retrieved?.name == "Work")
-        #expect(retrieved?.tabIDs == ["tab-1", "tab-2"])
+    func saveCreatesNewGroup() async throws {
+        let repo = MockGroupRepository()
+        let group = makeSampleGroup(name: "Work")
+        let windowID = "window-1"
+
+        try await repo.save(group, windowID: windowID)
+
+        let groups = try await repo.getAllGroups(windowID: windowID)
+        #expect(groups.count == 1)
+        #expect(groups.first?.id == group.id)
+        #expect(groups.first?.name == "Work")
     }
-    
-    @Test("Save updates existing group")
-    func testSaveUpdatesExistingGroup() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let group = TabGroup(name: "Original", tabIDs: ["tab-1"])
-        try await repository.save(group)
-        
-        let updated = group.withName("Updated")
-        try await repository.save(updated)
-        
-        let all = try await repository.getAll()
-        #expect(all.count == 1)
-        #expect(all[0].name == "Updated")
-    }
-    
-    @Test("Save throws on duplicate name")
-    func testSaveThrowsOnDuplicateName() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let group1 = TabGroup(name: "Work")
-        try await repository.save(group1)
-        
-        let group2 = TabGroup(name: "Work") // Different ID, same name
-        
-        await #expect(throws: ValidationError.self) {
-            try await repository.save(group2)
-        }
-    }
-    
-    @Test("Save allows same name for same group (update)")
-    func testSaveAllowsSameNameForSameGroup() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let group = TabGroup(name: "Work", tabIDs: ["tab-1"])
-        try await repository.save(group)
-        
-        let updated = group.withAddedTab("tab-2")
-        
-        // Should not throw even though name is the same
-        try await repository.save(updated)
-        
-        let retrieved = try await repository.get(id: group.id)
-        #expect(retrieved?.tabIDs.count == 2)
-    }
-    
-    @Test("Delete removes group")
-    func testDeleteRemovesGroup() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let group = TabGroup(name: "To Delete")
-        try await repository.save(group)
-        
-        var all = try await repository.getAll()
-        #expect(all.count == 1)
-        
-        try await repository.delete(id: group.id)
-        
-        all = try await repository.getAll()
-        #expect(all.isEmpty)
-    }
-    
-    @Test("Delete throws on non-existent group")
-    func testDeleteThrowsOnNonExistentGroup() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let nonExistentID = UUID()
-        
+
+    @Test("Save prevents duplicate names (FR-006)")
+    func savePreventsduplicateNames() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group1 = makeSampleGroup(name: "Work")
+        try await repo.save(group1, windowID: windowID)
+
+        let group2 = makeSampleGroup(name: "Work") // Different ID, same name
+
         await #expect(throws: StorageError.self) {
-            try await repository.delete(id: nonExistentID)
+            try await repo.save(group2, windowID: windowID)
         }
     }
-    
-    @Test("Get returns nil for non-existent group")
-    func testGetReturnsNilForNonExistentGroup() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let nonExistentID = UUID()
-        let result = try await repository.get(id: nonExistentID)
-        
-        #expect(result == nil)
+
+    @Test("Save allows same name in different windows")
+    func saveAllowsSameNameDifferentWindows() async throws {
+        let repo = MockGroupRepository()
+
+        let group1 = makeSampleGroup(name: "Work")
+        try await repo.save(group1, windowID: "window-1")
+
+        let group2 = makeSampleGroup(name: "Work")
+        try await repo.save(group2, windowID: "window-2")
+
+        let window1Groups = try await repo.getAllGroups(windowID: "window-1")
+        let window2Groups = try await repo.getAllGroups(windowID: "window-2")
+
+        #expect(window1Groups.count == 1)
+        #expect(window2Groups.count == 1)
     }
-    
-    @Test("GetAll returns empty array when no groups")
-    func testGetAllReturnsEmptyArrayWhenNoGroups() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let groups = try await repository.getAll()
-        
+
+    @Test("Save updates existing group")
+    func saveUpdatesExistingGroup() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group = makeSampleGroup(name: "Work", tabIDs: ["tab-1"])
+        try await repo.save(group, windowID: windowID)
+
+        // Update with more tabs
+        let updatedGroup = try group.withTabAdded("tab-2")
+        try await repo.save(updatedGroup, windowID: windowID)
+
+        let groups = try await repo.getAllGroups(windowID: windowID)
+        #expect(groups.count == 1) // Should be updated, not duplicated
+        #expect(groups.first?.tabIDs.count == 2)
+    }
+
+    // MARK: - Delete Tests
+
+    @Test("Delete removes group")
+    func deleteRemovesGroup() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group = makeSampleGroup(name: "Work")
+        try await repo.save(group, windowID: windowID)
+
+        try await repo.delete(groupID: group.id)
+
+        let groups = try await repo.getAllGroups(windowID: windowID)
         #expect(groups.isEmpty)
     }
-    
-    @Test("GetAll returns all saved groups")
-    func testGetAllReturnsAllSavedGroups() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let group1 = TabGroup(name: "Work")
-        let group2 = TabGroup(name: "Personal")
-        let group3 = TabGroup(name: "Research")
-        
-        try await repository.save(group1)
-        try await repository.save(group2)
-        try await repository.save(group3)
-        
-        let groups = try await repository.getAll()
-        
+
+    @Test("Delete throws on non-existent group")
+    func deleteThrowsOnNonExistentGroup() async throws {
+        let repo = MockGroupRepository()
+
+        await #expect(throws: StorageError.self) {
+            try await repo.delete(groupID: UUID())
+        }
+    }
+
+    @Test("Delete only affects target group")
+    func deleteOnlyAffectsTargetGroup() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group1 = makeSampleGroup(name: "Work")
+        let group2 = makeSampleGroup(name: "Research")
+
+        try await repo.save(group1, windowID: windowID)
+        try await repo.save(group2, windowID: windowID)
+
+        try await repo.delete(groupID: group1.id)
+
+        let groups = try await repo.getAllGroups(windowID: windowID)
+        #expect(groups.count == 1)
+        #expect(groups.first?.name == "Research")
+    }
+
+    // MARK: - GetAllGroups Tests
+
+    @Test("GetAllGroups returns empty for new window")
+    func getAllGroupsReturnsEmptyForNewWindow() async throws {
+        let repo = MockGroupRepository()
+
+        let groups = try await repo.getAllGroups(windowID: "window-1")
+        #expect(groups.isEmpty)
+    }
+
+    @Test("GetAllGroups returns all groups for window")
+    func getAllGroupsReturnsAllGroupsForWindow() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group1 = makeSampleGroup(name: "Work")
+        let group2 = makeSampleGroup(name: "Research")
+        let group3 = makeSampleGroup(name: "Shopping")
+
+        try await repo.save(group1, windowID: windowID)
+        try await repo.save(group2, windowID: windowID)
+        try await repo.save(group3, windowID: windowID)
+
+        let groups = try await repo.getAllGroups(windowID: windowID)
         #expect(groups.count == 3)
-        #expect(groups.contains { $0.name == "Work" })
-        #expect(groups.contains { $0.name == "Personal" })
-        #expect(groups.contains { $0.name == "Research" })
     }
-    
-    @Test("Exists returns true for existing name")
-    func testExistsReturnsTrueForExistingName() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let group = TabGroup(name: "Work")
-        try await repository.save(group)
-        
-        let exists = try await repository.exists(name: "Work", excludingID: nil)
-        
-        #expect(exists)
+
+    @Test("GetAllGroups isolates windows")
+    func getAllGroupsIsolatesWindows() async throws {
+        let repo = MockGroupRepository()
+
+        let group1 = makeSampleGroup(name: "Work")
+        try await repo.save(group1, windowID: "window-1")
+
+        let group2 = makeSampleGroup(name: "Research")
+        try await repo.save(group2, windowID: "window-2")
+
+        let window1Groups = try await repo.getAllGroups(windowID: "window-1")
+        let window2Groups = try await repo.getAllGroups(windowID: "window-2")
+
+        #expect(window1Groups.count == 1)
+        #expect(window2Groups.count == 1)
+        #expect(window1Groups.first?.name == "Work")
+        #expect(window2Groups.first?.name == "Research")
     }
-    
-    @Test("Exists returns false for non-existent name")
-    func testExistsReturnsFalseForNonExistentName() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let exists = try await repository.exists(name: "Work", excludingID: nil)
-        
-        #expect(!exists)
+
+    // MARK: - GetGroup Tests
+
+    @Test("GetGroup returns group by ID")
+    func getGroupReturnsGroupByID() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group = makeSampleGroup(name: "Work")
+        try await repo.save(group, windowID: windowID)
+
+        let retrieved = try await repo.getGroup(groupID: group.id)
+        #expect(retrieved?.id == group.id)
+        #expect(retrieved?.name == "Work")
     }
-    
-    @Test("Exists excludes specified ID")
-    func testExistsExcludesSpecifiedID() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let group = TabGroup(name: "Work")
-        try await repository.save(group)
-        
-        let exists = try await repository.exists(name: "Work", excludingID: group.id)
-        
-        #expect(!exists)
+
+    @Test("GetGroup returns nil for non-existent ID")
+    func getGroupReturnsNilForNonExistentID() async throws {
+        let repo = MockGroupRepository()
+
+        let retrieved = try await repo.getGroup(groupID: UUID())
+        #expect(retrieved == nil)
     }
-    
-    @Test("GetGroupsContaining returns groups with tab")
-    func testGetGroupsContainingReturnsGroupsWithTab() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let group1 = TabGroup(name: "Work", tabIDs: ["tab-1", "tab-2"])
-        let group2 = TabGroup(name: "Personal", tabIDs: ["tab-3", "tab-4"])
-        let group3 = TabGroup(name: "Research", tabIDs: ["tab-2", "tab-5"])
-        
-        try await repository.save(group1)
-        try await repository.save(group2)
-        try await repository.save(group3)
-        
-        let groupsWithTab2 = try await repository.getGroupsContaining(tabID: "tab-2")
-        
-        #expect(groupsWithTab2.count == 2)
-        #expect(groupsWithTab2.contains { $0.name == "Work" })
-        #expect(groupsWithTab2.contains { $0.name == "Research" })
+
+    // MARK: - Update Tests
+
+    @Test("Update modifies existing group")
+    func updateModifiesExistingGroup() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group = makeSampleGroup(name: "Work", tabIDs: ["tab-1"])
+        try await repo.save(group, windowID: windowID)
+
+        let updatedGroup = try group.withName("Work Projects")
+        try await repo.update(updatedGroup, windowID: windowID)
+
+        let retrieved = try await repo.getGroup(groupID: group.id)
+        #expect(retrieved?.name == "Work Projects")
     }
-    
-    @Test("GetGroupsContaining returns empty for non-existent tab")
-    func testGetGroupsContainingReturnsEmptyForNonExistentTab() async throws {
-        let storage = MockStorageAdapter()
-        let repository = DefaultTabGroupRepository(storage: storage)
-        
-        let group = TabGroup(name: "Work", tabIDs: ["tab-1"])
-        try await repository.save(group)
-        
-        let groups = try await repository.getGroupsContaining(tabID: "tab-999")
-        
+
+    @Test("Update throws on non-existent group")
+    func updateThrowsOnNonExistentGroup() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group = makeSampleGroup(name: "Work")
+
+        await #expect(throws: StorageError.self) {
+            try await repo.update(group, windowID: windowID)
+        }
+    }
+
+    @Test("Update prevents duplicate names (FR-006)")
+    func updatePreventsDuplicateNames() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group1 = makeSampleGroup(name: "Work")
+        let group2 = makeSampleGroup(name: "Research")
+
+        try await repo.save(group1, windowID: windowID)
+        try await repo.save(group2, windowID: windowID)
+
+        // Try to rename group2 to "Work" (duplicate)
+        let renamedGroup = try group2.withName("Work")
+
+        await #expect(throws: StorageError.self) {
+            try await repo.update(renamedGroup, windowID: windowID)
+        }
+    }
+
+    // MARK: - ObserveGroups Tests
+
+    @Test("ObserveGroups emits initial state")
+    func observeGroupsEmitsInitialState() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group = makeSampleGroup(name: "Work")
+        try await repo.save(group, windowID: windowID)
+
+        var receivedGroups: [TabGroup] = []
+        let stream = repo.observeGroups(windowID: windowID)
+
+        for await groups in stream {
+            receivedGroups = groups
+            break // Get first emission
+        }
+
+        #expect(receivedGroups.count == 1)
+        #expect(receivedGroups.first?.name == "Work")
+    }
+
+    @Test("ObserveGroups emits on save")
+    func observeGroupsEmitsOnSave() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        var emissionCount = 0
+        let stream = repo.observeGroups(windowID: windowID)
+
+        Task {
+            for await groups in stream {
+                emissionCount += 1
+                if emissionCount == 2 {
+                    break
+                }
+            }
+        }
+
+        // Wait for initial emission
+        try await Task.sleep(for: .milliseconds(100))
+
+        // Trigger change
+        let group = makeSampleGroup(name: "Work")
+        try await repo.save(group, windowID: windowID)
+
+        // Wait for second emission
+        try await Task.sleep(for: .milliseconds(100))
+
+        #expect(emissionCount == 2)
+    }
+
+    @Test("ObserveGroups emits on delete")
+    func observeGroupsEmitsOnDelete() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group = makeSampleGroup(name: "Work")
+        try await repo.save(group, windowID: windowID)
+
+        var latestGroups: [TabGroup] = []
+        let stream = repo.observeGroups(windowID: windowID)
+
+        Task {
+            for await groups in stream {
+                latestGroups = groups
+            }
+        }
+
+        // Wait for initial emission
+        try await Task.sleep(for: .milliseconds(100))
+
+        // Delete group
+        try await repo.delete(groupID: group.id)
+
+        // Wait for emission
+        try await Task.sleep(for: .milliseconds(100))
+
+        #expect(latestGroups.isEmpty)
+    }
+
+    // MARK: - Bulk Operations Tests
+
+    @Test("DeleteAllGroups removes all groups for window")
+    func deleteAllGroupsRemovesAllGroupsForWindow() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let group1 = makeSampleGroup(name: "Work")
+        let group2 = makeSampleGroup(name: "Research")
+
+        try await repo.save(group1, windowID: windowID)
+        try await repo.save(group2, windowID: windowID)
+
+        try await repo.deleteAllGroups(windowID: windowID)
+
+        let groups = try await repo.getAllGroups(windowID: windowID)
         #expect(groups.isEmpty)
+    }
+
+    @Test("DeleteAllGroups only affects target window")
+    func deleteAllGroupsOnlyAffectsTargetWindow() async throws {
+        let repo = MockGroupRepository()
+
+        let group1 = makeSampleGroup(name: "Work")
+        try await repo.save(group1, windowID: "window-1")
+
+        let group2 = makeSampleGroup(name: "Research")
+        try await repo.save(group2, windowID: "window-2")
+
+        try await repo.deleteAllGroups(windowID: "window-1")
+
+        let window1Groups = try await repo.getAllGroups(windowID: "window-1")
+        let window2Groups = try await repo.getAllGroups(windowID: "window-2")
+
+        #expect(window1Groups.isEmpty)
+        #expect(window2Groups.count == 1)
+    }
+
+    @Test("GetGroupCount returns correct count")
+    func getGroupCountReturnsCorrectCount() async throws {
+        let repo = MockGroupRepository()
+        let windowID = "window-1"
+
+        let count1 = try await repo.getGroupCount(windowID: windowID)
+        #expect(count1 == 0)
+
+        let group1 = makeSampleGroup(name: "Work")
+        try await repo.save(group1, windowID: windowID)
+
+        let count2 = try await repo.getGroupCount(windowID: windowID)
+        #expect(count2 == 1)
+
+        let group2 = makeSampleGroup(name: "Research")
+        try await repo.save(group2, windowID: windowID)
+
+        let count3 = try await repo.getGroupCount(windowID: windowID)
+        #expect(count3 == 2)
     }
 }

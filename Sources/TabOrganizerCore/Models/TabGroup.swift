@@ -1,50 +1,72 @@
 import Foundation
 
-/// Represents a named collection of tabs created by the user or AI suggestions.
+/// Represents a named collection of tabs
 ///
-/// TabGroup is the primary organizational unit in the Tab Organizer extension.
-/// It provides a way to logically group related tabs together with visual distinction
-/// (color coding) and UI management (collapsible/expandable).
-public struct TabGroup: Identifiable, Codable, Sendable {
+/// Immutable value type that can be safely passed across concurrency boundaries.
+/// All modifications create new instances following value semantics.
+public struct TabGroup: Codable, Sendable, Identifiable, Equatable {
     /// Unique identifier for the group
     public let id: UUID
-    
-    /// User-defined or AI-suggested name (e.g., "Work", "Research")
-    public var name: String
-    
+
+    /// User-defined or AI-suggested name (max 50 characters)
+    public let name: String
+
     /// Hex color code for visual distinction (e.g., "#007AFF")
-    public var color: String
-    
+    public let color: String
+
     /// Whether the group is collapsed in UI
-    public var collapsed: Bool
-    
+    public let collapsed: Bool
+
     /// Creation timestamp
     public let createdAt: Date
-    
+
     /// Last modification timestamp
-    public var updatedAt: Date
-    
+    public let updatedAt: Date
+
     /// Array of tab identifiers belonging to this group
-    public var tabIDs: [String]
-    
-    /// Extensible key-value metadata (e.g., "aiSuggested": "true")
-    public var metadata: [String: String]
-    
-    /// Maximum allowed characters for group name
+    public let tabIDs: [String]
+
+    /// Extensible key-value metadata
+    public let metadata: [String: String]
+
+    // MARK: - Validation Constants
+
     public static let maxNameLength = 50
-    
-    /// Default color for new groups
     public static let defaultColor = "#007AFF"
-    
-    /// Creates a new TabGroup with the specified properties
+
+    // MARK: - Validation Errors
+
+    public enum ValidationError: Error, LocalizedError {
+        case nameEmpty
+        case nameTooLong(length: Int, maxLength: Int)
+        case invalidColorFormat(color: String)
+
+        public var errorDescription: String? {
+            switch self {
+            case .nameEmpty:
+                return "Group name cannot be empty"
+            case .nameTooLong(let length, let maxLength):
+                return "Group name is too long (\(length) characters). Maximum is \(maxLength) characters."
+            case .invalidColorFormat(let color):
+                return "Invalid color format '\(color)'. Expected hex format (e.g., #007AFF) or predefined color name."
+            }
+        }
+    }
+
+    // MARK: - Initialization
+
+    /// Creates a new tab group
     ///
     /// - Parameters:
-    ///   - id: Unique identifier (defaults to new UUID)
-    ///   - name: Group name
-    ///   - color: Hex color code (defaults to system blue)
-    ///   - collapsed: Initial collapsed state (defaults to false)
-    ///   - tabIDs: Array of tab IDs to include (defaults to empty)
-    ///   - metadata: Additional metadata (defaults to empty)
+    ///   - id: Unique identifier (default: new UUID)
+    ///   - name: Group name (must be non-empty, max 50 chars)
+    ///   - color: Hex color code (default: #007AFF)
+    ///   - collapsed: Whether collapsed (default: false)
+    ///   - createdAt: Creation timestamp (default: now)
+    ///   - updatedAt: Update timestamp (default: now)
+    ///   - tabIDs: Tab identifiers (default: empty array)
+    ///   - metadata: Extensible metadata (default: empty)
+    /// - Throws: `ValidationError` if validation fails
     public init(
         id: UUID = UUID(),
         name: String,
@@ -54,7 +76,20 @@ public struct TabGroup: Identifiable, Codable, Sendable {
         updatedAt: Date = Date(),
         tabIDs: [String] = [],
         metadata: [String: String] = [:]
-    ) {
+    ) throws {
+        // Validate name
+        guard !name.isEmpty else {
+            throw ValidationError.nameEmpty
+        }
+        guard name.count <= TabGroup.maxNameLength else {
+            throw ValidationError.nameTooLong(length: name.count, maxLength: TabGroup.maxNameLength)
+        }
+
+        // Validate color format
+        guard Self.isValidColor(color) else {
+            throw ValidationError.invalidColorFormat(color: color)
+        }
+
         self.id = id
         self.name = name
         self.color = color
@@ -64,129 +99,148 @@ public struct TabGroup: Identifiable, Codable, Sendable {
         self.tabIDs = tabIDs
         self.metadata = metadata
     }
-    
-    /// Validates the TabGroup against business rules
-    ///
-    /// - Throws: `ValidationError` if any validation rule fails
-    public func validate() throws {
-        // Name must be non-empty
-        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            throw ValidationError.emptyName
-        }
-        
-        // Name must not exceed max length
-        guard name.count <= TabGroup.maxNameLength else {
-            throw ValidationError.nameTooLong(max: TabGroup.maxNameLength)
-        }
-        
-        // Color must be valid hex format or predefined color
-        guard isValidColor(color) else {
-            throw ValidationError.invalidColor(color)
-        }
+
+    // MARK: - Mutations (Value Semantics)
+
+    /// Returns a new TabGroup with updated name
+    public func withName(_ newName: String) throws -> TabGroup {
+        try TabGroup(
+            id: id,
+            name: newName,
+            color: color,
+            collapsed: collapsed,
+            createdAt: createdAt,
+            updatedAt: Date(),
+            tabIDs: tabIDs,
+            metadata: metadata
+        )
     }
-    
-    /// Checks if a color string is valid (hex format or predefined name)
-    private func isValidColor(_ color: String) -> Bool {
-        // Check hex format: #RGB or #RRGGBB
-        let hexPattern = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
-        if let regex = try? NSRegularExpression(pattern: hexPattern),
-           regex.firstMatch(in: color, range: NSRange(color.startIndex..., in: color)) != nil {
-            return true
+
+    /// Returns a new TabGroup with updated color
+    public func withColor(_ newColor: String) throws -> TabGroup {
+        try TabGroup(
+            id: id,
+            name: name,
+            color: newColor,
+            collapsed: collapsed,
+            createdAt: createdAt,
+            updatedAt: Date(),
+            tabIDs: tabIDs,
+            metadata: metadata
+        )
+    }
+
+    /// Returns a new TabGroup with toggled collapse state
+    public func withCollapsedToggled() throws -> TabGroup {
+        try TabGroup(
+            id: id,
+            name: name,
+            color: color,
+            collapsed: !collapsed,
+            createdAt: createdAt,
+            updatedAt: Date(),
+            tabIDs: tabIDs,
+            metadata: metadata
+        )
+    }
+
+    /// Returns a new TabGroup with added tab ID
+    public func withTabAdded(_ tabID: String) throws -> TabGroup {
+        guard !tabIDs.contains(tabID) else {
+            return self // Already contains tab, no change
         }
-        
-        // Check predefined colors
-        let predefinedColors = ["blue", "red", "green", "yellow", "orange", "purple", "pink", "gray"]
+
+        return try TabGroup(
+            id: id,
+            name: name,
+            color: color,
+            collapsed: collapsed,
+            createdAt: createdAt,
+            updatedAt: Date(),
+            tabIDs: tabIDs + [tabID],
+            metadata: metadata
+        )
+    }
+
+    /// Returns a new TabGroup with removed tab ID
+    public func withTabRemoved(_ tabID: String) throws -> TabGroup {
+        try TabGroup(
+            id: id,
+            name: name,
+            color: color,
+            collapsed: collapsed,
+            createdAt: createdAt,
+            updatedAt: Date(),
+            tabIDs: tabIDs.filter { $0 != tabID },
+            metadata: metadata
+        )
+    }
+
+    /// Returns a new TabGroup with updated metadata
+    public func withMetadata(_ newMetadata: [String: String]) throws -> TabGroup {
+        try TabGroup(
+            id: id,
+            name: name,
+            color: color,
+            collapsed: collapsed,
+            createdAt: createdAt,
+            updatedAt: Date(),
+            tabIDs: tabIDs,
+            metadata: newMetadata
+        )
+    }
+
+    // MARK: - Computed Properties
+
+    /// Whether this group is empty (no tabs)
+    public var isEmpty: Bool {
+        tabIDs.isEmpty
+    }
+
+    /// Number of tabs in this group
+    public var tabCount: Int {
+        tabIDs.count
+    }
+
+    /// Whether this group was created by AI
+    public var isAISuggested: Bool {
+        metadata["aiSuggested"] == "true"
+    }
+
+    // MARK: - Validation Helpers
+
+    /// Validates hex color format (#RRGGBB) or predefined color names
+    private static func isValidColor(_ color: String) -> Bool {
+        // Hex format validation
+        if color.hasPrefix("#") {
+            let hex = String(color.dropFirst())
+            return hex.count == 6 && hex.allSatisfy { $0.isHexDigit }
+        }
+
+        // Predefined color names
+        let predefinedColors = ["red", "blue", "green", "yellow", "orange", "purple", "pink", "gray", "black", "white"]
         return predefinedColors.contains(color.lowercased())
     }
-    
-    /// Creates a copy of this group with updated modification timestamp
-    public func withUpdatedTimestamp() -> TabGroup {
-        var copy = self
-        copy.updatedAt = Date()
-        return copy
-    }
-    
-    /// Creates a copy of this group with a new name
-    public func withName(_ newName: String) -> TabGroup {
-        var copy = self
-        copy.name = newName
-        copy.updatedAt = Date()
-        return copy
-    }
-    
-    /// Creates a copy of this group with updated tab IDs
-    public func withTabIDs(_ newTabIDs: [String]) -> TabGroup {
-        var copy = self
-        copy.tabIDs = newTabIDs
-        copy.updatedAt = Date()
-        return copy
-    }
-    
-    /// Adds a tab to this group
-    public func withAddedTab(_ tabID: String) -> TabGroup {
-        guard !tabIDs.contains(tabID) else { return self }
-        var copy = self
-        copy.tabIDs.append(tabID)
-        copy.updatedAt = Date()
-        return copy
-    }
-    
-    /// Removes a tab from this group
-    public func withRemovedTab(_ tabID: String) -> TabGroup {
-        var copy = self
-        copy.tabIDs.removeAll { $0 == tabID }
-        copy.updatedAt = Date()
-        return copy
-    }
-    
-    /// Creates a copy of this group with a new color
-    public func withColor(_ newColor: String) -> TabGroup {
-        var copy = self
-        copy.color = newColor
-        copy.updatedAt = Date()
-        return copy
-    }
-    
-    /// Creates a copy of this group with updated collapsed state
-    public func withCollapsed(_ isCollapsed: Bool) -> TabGroup {
-        var copy = self
-        copy.collapsed = isCollapsed
-        copy.updatedAt = Date()
-        return copy
-    }
 }
 
-// MARK: - Hashable & Equatable
+// MARK: - Convenience Extensions
 
-extension TabGroup: Hashable {
-    /// Hash based on ID only for Set/Dictionary usage
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-    
-    /// Equality based on ID only
-    public static func == (lhs: TabGroup, rhs: TabGroup) -> Bool {
-        lhs.id == rhs.id
-    }
-}
+extension TabGroup {
+    /// Predefined color palette
+    public static let colorPalette = [
+        "#007AFF", // Blue
+        "#FF3B30", // Red
+        "#34C759", // Green
+        "#FF9500", // Orange
+        "#AF52DE", // Purple
+        "#FF2D55", // Pink
+        "#5856D6", // Indigo
+        "#64D2FF"  // Cyan
+    ]
 
-/// Validation errors for TabGroup
-public enum ValidationError: Error, LocalizedError, Sendable {
-    case emptyName
-    case nameTooLong(max: Int)
-    case invalidColor(String)
-    case duplicateName(String)
-    
-    public var errorDescription: String? {
-        switch self {
-        case .emptyName:
-            return "Group name cannot be empty"
-        case .nameTooLong(let max):
-            return "Group name cannot exceed \(max) characters"
-        case .invalidColor(let color):
-            return "Invalid color format: \(color)"
-        case .duplicateName(let name):
-            return "A group named '\(name)' already exists"
-        }
+    /// Creates a group with a random color from palette
+    public static func withRandomColor(name: String) throws -> TabGroup {
+        let randomColor = colorPalette.randomElement() ?? defaultColor
+        return try TabGroup(name: name, color: randomColor)
     }
 }

@@ -39,35 +39,35 @@
 
 ### Safari API Layer (Foundation for all features)
 
-- [ ] T010 Define TabManaging protocol in Sources/TabOrganizerSafariAPI/Protocols/TabManaging.swift
-- [ ] T011 Define TabInfo struct (Codable, Sendable) in Sources/TabOrganizerSafariAPI/Models/TabInfo.swift
-- [ ] T012 Define TabAPIError enum in Sources/TabOrganizerSafariAPI/Errors/TabAPIError.swift
-- [ ] T013 Implement SafariTabManager (production) in Sources/TabOrganizerSafariAPI/Adapters/SafariTabManager.swift with private tab filtering
-- [ ] T014 Implement MockTabManager (testing) in Tests/TabOrganizerSafariAPITests/Mocks/MockTabManager.swift
-- [ ] T015 Write SafariTabManager tests in Tests/TabOrganizerSafariAPITests/SafariTabManagerTests.swift
+- [X] T010 Define TabManaging protocol in Sources/TabOrganizerSafariAPI/Protocols/TabManaging.swift
+- [X] T011 Define TabInfo struct (Codable, Sendable) in Sources/TabOrganizerSafariAPI/Models/TabInfo.swift
+- [X] T012 Define TabAPIError enum in Sources/TabOrganizerSafariAPI/Errors/TabAPIError.swift
+- [X] T013 Implement SafariTabManager (production) in Sources/TabOrganizerSafariAPI/Adapters/SafariTabManager.swift with private tab filtering
+- [X] T014 Implement MockTabManager (testing) in Tests/TabOrganizerSafariAPITests/Mocks/MockTabManager.swift
+- [X] T015 Write SafariTabManager tests in Tests/TabOrganizerSafariAPITests/SafariTabManagerTests.swift
 
 ### Storage Layer (Foundation for persistence)
 
-- [ ] T016 Define SafariStorageAdapter protocol in Sources/TabOrganizerStorage/Protocols/SafariStorageAdapter.swift
-- [ ] T017 Define StorageError enum in Sources/TabOrganizerStorage/Errors/StorageError.swift
-- [ ] T018 Implement UserDefaultsStorageAdapter in Sources/TabOrganizerStorage/Adapters/UserDefaultsStorageAdapter.swift with JSON encoding
-- [ ] T019 Implement MockStorageAdapter in Tests/TabOrganizerStorageTests/Mocks/MockStorageAdapter.swift
-- [ ] T020 Write StorageAdapter tests in Tests/TabOrganizerStorageTests/StorageAdapterTests.swift
+- [X] T016 Define SafariStorageAdapter protocol in Sources/TabOrganizerStorage/Protocols/SafariStorageAdapter.swift
+- [X] T017 Define StorageError enum in Sources/TabOrganizerStorage/Errors/StorageError.swift
+- [X] T018 Implement UserDefaultsStorageAdapter in Sources/TabOrganizerStorage/Adapters/UserDefaultsStorageAdapter.swift with JSON encoding
+- [X] T019 Implement MockStorageAdapter in Tests/TabOrganizerStorageTests/Mocks/MockStorageAdapter.swift
+- [X] T020 Write StorageAdapter tests in Tests/TabOrganizerStorageTests/StorageAdapterTests.swift
 
 ### Core Domain Models (Foundation for all entities)
 
-- [ ] T021 Define TabGroup struct in Sources/TabOrganizerCore/Models/TabGroup.swift with validation
-- [ ] T022 Define Tab struct in Sources/TabOrganizerCore/Models/Tab.swift
-- [ ] T023 Define UserSettings struct in Sources/TabOrganizerCore/Models/UserSettings.swift with defaults
-- [ ] T024 [P] Define ContextAnalysis struct in Sources/TabOrganizerCore/Models/ContextAnalysis.swift
-- [ ] T025 [P] Define CleanupSuggestion struct in Sources/TabOrganizerCore/Models/CleanupSuggestion.swift
-- [ ] T026 Write model validation tests in Tests/TabOrganizerCoreTests/Models/ModelTests.swift
+- [X] T021 Define TabGroup struct in Sources/TabOrganizerCore/Models/TabGroup.swift with validation
+- [X] T022 Define Tab struct in Sources/TabOrganizerCore/Models/Tab.swift
+- [X] T023 Define UserSettings struct in Sources/TabOrganizerCore/Models/UserSettings.swift with defaults
+- [X] T024 [P] Define ContextAnalysis struct in Sources/TabOrganizerCore/Models/ContextAnalysis.swift
+- [X] T025 [P] Define CleanupSuggestion struct in Sources/TabOrganizerCore/Models/CleanupSuggestion.swift
+- [X] T026 Write model validation tests in Tests/TabOrganizerCoreTests/Models/ModelTests.swift
 
 ### Extension Entry Point
 
-- [ ] T027 Implement SafariExtensionHandler in Sources/TabOrganizerExtension/SafariExtensionHandler.swift with lifecycle methods
-- [ ] T028 Create extension Resources bundle structure in Sources/TabOrganizerExtension/Resources/
-- [ ] T029 [P] Add extension icon assets to Sources/TabOrganizerExtension/Resources/icon.png
+- [X] T027 Implement SafariExtensionHandler in Sources/TabOrganizerExtension/SafariExtensionHandler.swift with lifecycle methods
+- [X] T028 Create extension Resources bundle structure in Sources/TabOrganizerExtension/Resources/
+- [X] T029 [P] Add extension icon assets to Sources/TabOrganizerExtension/Resources/icon.png
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -79,34 +79,41 @@
 
 **Independent Test**: Create 10+ tabs, organize into 2-3 groups, close Safari, reopen, verify groups persist with correct tabs
 
+**TDD Approach for SwiftUI**: Per Constitution Principle III, tests must be written first. For SwiftUI components, this follows a preview-driven approach:
+1. Create SwiftUI Preview with realistic sample data BEFORE implementation
+2. Preview serves as "visual test" - verify UI renders correctly with sample states
+3. Implement component logic to match preview expectations
+4. Write formal Swift Testing tests (T044) to verify state management and logic
+5. This adapted TDD workflow ensures UI components meet acceptance criteria from the start
+
 ### US1 - Data & Persistence
 
-- [ ] T030 [P] [US1] Define TabGroupRepository protocol in Sources/TabOrganizerStorage/Protocols/TabGroupRepository.swift
-- [ ] T031 [US1] Implement SafariGroupRepository in Sources/TabOrganizerStorage/Repositories/SafariGroupRepository.swift with duplicate name prevention
-- [ ] T032 [US1] Implement MockGroupRepository in Tests/TabOrganizerStorageTests/Mocks/MockGroupRepository.swift
-- [ ] T033 [US1] Write TabGroupRepository tests in Tests/TabOrganizerStorageTests/TabGroupRepositoryTests.swift (save, delete, getAll, observeGroups)
+- [X] T030 [P] [US1] Define TabGroupRepository protocol in Sources/TabOrganizerStorage/Protocols/TabGroupRepository.swift
+- [X] T031 [US1] Implement SafariGroupRepository in Sources/TabOrganizerStorage/Repositories/SafariGroupRepository.swift with duplicate name prevention
+- [X] T032 [US1] Implement MockGroupRepository in Tests/TabOrganizerStorageTests/Mocks/MockGroupRepository.swift
+- [X] T033 [US1] Write TabGroupRepository tests in Tests/TabOrganizerStorageTests/TabGroupRepositoryTests.swift (save, delete, getAll, observeGroups)
 
 ### US1 - Business Logic
 
-- [ ] T034 [US1] Implement TabGroupService in Sources/TabOrganizerCore/Services/TabGroupService.swift with createGroup, deleteGroup, updateGroup, getAllGroups
-- [ ] T035 [US1] Implement TabTrackingService in Sources/TabOrganizerCore/Services/TabTrackingService.swift for lastViewedAt timestamps
-- [ ] T036 [US1] Write TabGroupService tests in Tests/TabOrganizerCoreTests/Services/TabGroupServiceTests.swift with mock dependencies
+- [X] T034 [US1] Implement TabGroupService in Sources/TabOrganizerCore/Services/TabGroupService.swift with createGroup, deleteGroup, updateGroup, getAllGroups
+- [X] T035 [US1] Implement TabTrackingService in Sources/TabOrganizerCore/Services/TabTrackingService.swift for lastViewedAt timestamps
+- [X] T036 [US1] Write TabGroupService tests in Tests/TabOrganizerCoreTests/Services/TabGroupServiceTests.swift with mock dependencies
 
 ### US1 - UI Components
 
-- [ ] T037 [P] [US1] Create ExtensionState @Observable class in Sources/TabOrganizerUI/State/ExtensionState.swift for top-level state
-- [ ] T038 [P] [US1] Create TabCard SwiftUI component in Sources/TabOrganizerUI/Components/TabCard.swift with accessibility labels
-- [ ] T039 [P] [US1] Create GroupHeader SwiftUI component in Sources/TabOrganizerUI/Components/GroupHeader.swift with collapse/expand
-- [ ] T040 [US1] Create GroupListView in Sources/TabOrganizerUI/Views/GroupListView.swift showing all groups with drag-drop support
-- [ ] T041 [US1] Create GroupEditorView in Sources/TabOrganizerUI/Views/GroupEditorView.swift for create/edit group
-- [ ] T042 [US1] Create TabDragView in Sources/TabOrganizerUI/Views/TabDragView.swift with drag-and-drop handlers
-- [ ] T043 [US1] Wire GroupListView to SafariExtensionHandler popover in Sources/TabOrganizerExtension/SafariExtensionHandler.swift
+- [X] T037 [P] [US1] Create ExtensionState @Observable class in Sources/TabOrganizerUI/State/ExtensionState.swift for top-level state
+- [X] T038 [P] [US1] Create TabCard SwiftUI component in Sources/TabOrganizerUI/Components/TabCard.swift with accessibilityLabel for tab title, accessibilityIdentifier for testing, and accessibilityHint for drag action
+- [X] T039 [P] [US1] Create GroupHeader SwiftUI component in Sources/TabOrganizerUI/Components/GroupHeader.swift with collapse/expand, accessibilityLabel for group name, and accessibilityHint for collapse/expand action
+- [X] T040 [US1] Create GroupListView in Sources/TabOrganizerUI/Views/GroupListView.swift showing all groups with drag-drop support, accessibilityLabel for list, and accessibilityElement grouping for each group
+- [X] T041 [US1] Create GroupEditorView in Sources/TabOrganizerUI/Views/GroupEditorView.swift for create/edit group with accessibilityLabel for text fields and buttons
+- [X] T042 [US1] Create TabDragView in Sources/TabOrganizerUI/Views/TabDragView.swift with drag-and-drop handlers and accessibility support for drag gestures
+- [X] T043 [US1] Wire GroupListView to SafariExtensionHandler popover in Sources/TabOrganizerExtension/SafariExtensionHandler.swift
 
 ### US1 - Testing & Integration
 
-- [ ] T044 [US1] Write UI component tests in Tests/TabOrganizerUITests/Views/GroupListViewTests.swift
-- [ ] T045 [US1] Write US1 integration test in Tests/TabOrganizerIntegrationTests/US1_ManualGroupingTests.swift (full create-persist-restore flow)
-- [ ] T046 [US1] Manual accessibility testing with VoiceOver for all US1 UI components
+- [X] T044 [US1] Write UI component tests in Tests/TabOrganizerUITests/Views/GroupListViewTests.swift
+- [X] T045 [US1] Write US1 integration test in Tests/TabOrganizerIntegrationTests/US1_ManualGroupingTests.swift (full create-persist-restore flow)
+- [X] T046 [US1] Manual accessibility testing with VoiceOver for all US1 UI components
 
 ---
 
@@ -142,7 +149,7 @@
 ### US2 - UI & Integration
 
 - [ ] T061 [P] [US2] Create GroupSuggestion struct in Sources/TabOrganizerCore/Models/GroupSuggestion.swift
-- [ ] T062 [US2] Create SuggestionsView in Sources/TabOrganizerUI/Views/SuggestionsView.swift with preview, edit capabilities, and explanation labels showing grouping rationale (FR-008: "Same domain", "Similar keywords: X, Y, Z")
+- [ ] T062 [US2] Create SuggestionsView in Sources/TabOrganizerUI/Views/SuggestionsView.swift with preview, edit capabilities, explanation labels showing grouping rationale (FR-008: "Same domain", "Similar keywords: X, Y, Z"), and accessibility labels for all interactive elements
 - [ ] T063 [US2] Add "Suggest Groups" button to GroupListView toolbar in Sources/TabOrganizerUI/Views/GroupListView.swift
 - [ ] T064 [US2] Wire AI analysis to SuggestionsView with progress indicator in Sources/TabOrganizerUI/Views/SuggestionsView.swift
 - [ ] T065 [US2] Write US2 integration test in Tests/TabOrganizerIntegrationTests/US2_AIGroupingTests.swift (full suggest-accept flow)
@@ -164,10 +171,10 @@
 
 ### US3 - UI Highlighting
 
-- [ ] T070 [P] [US3] Create HighlightIndicator SwiftUI component in Sources/TabOrganizerUI/Components/HighlightIndicator.swift with blue border style
+- [ ] T070 [P] [US3] Create HighlightIndicator SwiftUI component in Sources/TabOrganizerUI/Components/HighlightIndicator.swift with blue border style and accessibilityLabel indicating highlighted state
 - [ ] T071 [US3] Add tab selection observer to ExtensionState in Sources/TabOrganizerUI/State/ExtensionState.swift
 - [ ] T072 [US3] Implement highlighting logic in GroupListView in Sources/TabOrganizerUI/Views/GroupListView.swift updating on tab selection
-- [ ] T073 [US3] Create SettingsView in Sources/TabOrganizerUI/Views/SettingsView.swift with context highlighting toggle
+- [ ] T073 [US3] Create SettingsView in Sources/TabOrganizerUI/Views/SettingsView.swift with context highlighting toggle, accessibilityLabel for all toggles and controls
 - [ ] T074 [US3] Write US3 integration test in Tests/TabOrganizerIntegrationTests/US3_ContextHighlightingTests.swift
 
 ---
@@ -188,7 +195,7 @@
 
 - [ ] T078 [US4] Add autoRearrangementEnabled toggle to UserSettings in Sources/TabOrganizerCore/Models/UserSettings.swift
 - [ ] T079 [US4] Implement SettingsRepository in Sources/TabOrganizerStorage/Repositories/SettingsRepository.swift
-- [ ] T080 [US4] Add auto-rearrange toggle to SettingsView in Sources/TabOrganizerUI/Views/SettingsView.swift
+- [ ] T080 [US4] Add auto-rearrange toggle to SettingsView in Sources/TabOrganizerUI/Views/SettingsView.swift with accessibility labels
 - [ ] T081 [US4] Wire rearrangement to tab selection in ExtensionState in Sources/TabOrganizerUI/State/ExtensionState.swift
 - [ ] T082 [US4] Write US4 integration test in Tests/TabOrganizerIntegrationTests/US4_AutoRearrangementTests.swift
 - [ ] T083 [US4] Performance test: verify rearrangement completes in <1s for 100 tabs in Tests/TabOrganizerCoreTests/Services/PerformanceTests.swift
@@ -210,10 +217,10 @@
 
 ### US5 - UI & Settings
 
-- [ ] T088 [P] [US5] Create CleanupView in Sources/TabOrganizerUI/Views/CleanupView.swift with tab preview, keep/close actions, and "Keep" marking to exclude specific tabs from future suggestions (FR-026)
-- [ ] T089 [US5] Add cleanup settings to SettingsView in Sources/TabOrganizerUI/Views/SettingsView.swift (threshold, auto-close toggle)
+- [ ] T088 [P] [US5] Create CleanupView in Sources/TabOrganizerUI/Views/CleanupView.swift with tab preview, keep/close actions, "Keep" marking to exclude specific tabs from future suggestions (FR-026), and accessibility labels for all actions
+- [ ] T089 [US5] Add cleanup settings to SettingsView in Sources/TabOrganizerUI/Views/SettingsView.swift (threshold, auto-close toggle) with accessibility labels
 - [ ] T090 [US5] Add cleanup notification/prompt to ExtensionState in Sources/TabOrganizerUI/State/ExtensionState.swift
-- [ ] T091 [US5] Add undo button to CleanupView in Sources/TabOrganizerUI/Views/CleanupView.swift
+- [ ] T091 [US5] Add undo button to CleanupView in Sources/TabOrganizerUI/Views/CleanupView.swift with accessibilityLabel and accessibilityHint
 - [ ] T092 [US5] Write US5 integration test in Tests/TabOrganizerIntegrationTests/US5_CleanupTests.swift (suggest-accept-undo flow)
 
 ---
@@ -228,12 +235,14 @@
 - [ ] T094 [P] Implement graceful degradation for permission denial in Sources/TabOrganizerSafariAPI/Adapters/SafariTabManager.swift
 - [ ] T095 [P] Add error recovery for storage quota exceeded in Sources/TabOrganizerStorage/Adapters/UserDefaultsStorageAdapter.swift
 
-### Accessibility
+### Accessibility (Advanced Testing & Audit)
 
-- [ ] T096 Audit all UI components for accessibility labels in Sources/TabOrganizerUI/
-- [ ] T097 Add accessibility hints to non-obvious actions in Sources/TabOrganizerUI/Views/
-- [ ] T098 Write accessibility tests for all views in Tests/TabOrganizerUITests/AccessibilityTests.swift
-- [ ] T099 Manual VoiceOver testing across all user stories
+**Note**: Basic accessibility (accessibilityLabel, accessibilityIdentifier, accessibilityHint) is built into each user story's UI tasks (US1-US5) per Constitution Principle VI. This section focuses on comprehensive audit and advanced testing.
+
+- [ ] T096 Audit all UI components for complete accessibility coverage in Sources/TabOrganizerUI/ (verify Dynamic Type support, contrast ratios, focus order)
+- [ ] T097 Enhance accessibility hints for complex interactions in Sources/TabOrganizerUI/Views/ (multi-step workflows, drag-and-drop)
+- [ ] T098 Write accessibility tests for all views in Tests/TabOrganizerUITests/AccessibilityTests.swift (automated trait verification)
+- [ ] T099 Manual VoiceOver testing across all user stories (end-to-end accessibility validation)
 
 ### Internationalization
 

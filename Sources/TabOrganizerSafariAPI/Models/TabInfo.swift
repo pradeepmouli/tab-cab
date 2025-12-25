@@ -1,52 +1,61 @@
 import Foundation
 
-/// Information about a Safari tab extracted from Safari Extension APIs.
+/// Represents a Safari tab with its metadata
 ///
-/// TabInfo is a value type that represents a snapshot of a tab's state at a point in time.
-/// It's designed to be Sendable for safe cross-actor usage and Codable for storage.
-public struct TabInfo: Identifiable, Codable, Sendable, Hashable {
-    /// Safari's internal tab identifier
+/// Immutable value type capturing tab state at a point in time.
+/// Safe to pass across concurrency boundaries.
+public struct TabInfo: Codable, Sendable, Identifiable, Equatable {
+    /// Unique identifier for the tab
     public let id: String
-    
+
     /// Tab's current URL
     public let url: URL
-    
-    /// Page title
+
+    /// Tab's title (page title or URL if title unavailable)
     public let title: String
-    
-    /// Extracted domain
-    public let domain: String
-    
-    /// Whether this tab is currently active
+
+    /// Identifier of the window containing this tab
+    public let windowID: String
+
+    /// Tab's position in the window (0-based index)
+    public let index: Int
+
+    /// Whether the tab is currently active (selected)
     public let isActive: Bool
-    
-    /// Whether this tab is pinned
+
+    /// Whether the tab is pinned
     public let isPinned: Bool
-    
-    /// Whether this tab is in private browsing mode
-    public let isPrivate: Bool
-    
-    /// Optional favicon URL
-    public let faviconURL: URL?
-    
-    /// Creates a TabInfo instance
+
+    /// Extracted domain from URL (e.g., "github.com")
+    public var domain: String {
+        url.host ?? ""
+    }
+
+    /// Creates a new TabInfo instance
+    ///
+    /// - Parameters:
+    ///   - id: Unique identifier for the tab
+    ///   - url: Tab's current URL
+    ///   - title: Tab's title
+    ///   - windowID: Identifier of the containing window
+    ///   - index: Tab's position in the window (0-based)
+    ///   - isActive: Whether the tab is currently selected
+    ///   - isPinned: Whether the tab is pinned
     public init(
         id: String,
         url: URL,
         title: String,
-        domain: String? = nil,
-        isActive: Bool = false,
-        isPinned: Bool = false,
-        isPrivate: Bool = false,
-        faviconURL: URL? = nil
+        windowID: String,
+        index: Int,
+        isActive: Bool,
+        isPinned: Bool
     ) {
         self.id = id
         self.url = url
         self.title = title
-        self.domain = domain ?? url.host ?? url.absoluteString
+        self.windowID = windowID
+        self.index = index
         self.isActive = isActive
         self.isPinned = isPinned
-        self.isPrivate = isPrivate
-        self.faviconURL = faviconURL
     }
 }

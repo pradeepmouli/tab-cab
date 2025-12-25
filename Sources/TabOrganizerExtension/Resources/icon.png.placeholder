@@ -1,0 +1,5 @@
+PLACEHOLDER: Replace with actual 32x32px PNG icon
+This file should be renamed to icon.png after creating the actual icon asset.
+
+Recommended design: Stacked layers representing grouped tabs (3 horizontal rectangles)
+Colors: Use macOS system blue or brand color with transparency

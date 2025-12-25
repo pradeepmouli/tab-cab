@@ -1,82 +1,123 @@
 import Foundation
 
-/// UserDefaults-based implementation of StorageAdapter.
+/// UserDefaults-backed storage adapter for Safari Extension
 ///
-/// Provides persistent storage using Foundation's UserDefaults with JSON encoding.
-/// All operations are performed on a background actor to avoid blocking the main thread.
-public actor UserDefaultsStorageAdapter: StorageAdapter {
+/// Uses JSON encoding for all values to ensure Sendable compliance.
+/// Monitors storage size to prevent quota exceeded errors (5MB Safari limit).
+public actor UserDefaultsStorageAdapter: SafariStorageAdapter {
+
+    // MARK: - Properties
+
     private let userDefaults: UserDefaults
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
-    
-    /// Key prefix for all stored values
+
+    /// Maximum storage size in bytes (5MB for Safari extensions)
+    private let maxStorageSize: Int = 5 * 1024 * 1024
+
+    /// Key prefix to namespace extension storage
     private let keyPrefix: String
-    
-    /// Maximum allowed data size per key (5MB)
-    private let maxDataSize = 5 * 1024 * 1024
-    
-    /// Creates a UserDefaults storage adapter
+
+    // MARK: - Initialization
+
+    /// Creates a storage adapter with UserDefaults
     ///
     /// - Parameters:
-    ///   - suiteName: Optional suite name for app group sharing
-    ///   - keyPrefix: Prefix for all keys (default: "tabOrganizer.")
-    public init(suiteName: String? = nil, keyPrefix: String = "tabOrganizer.") {
-        if let suiteName = suiteName {
-            self.userDefaults = UserDefaults(suiteName: suiteName) ?? .standard
-        } else {
-            self.userDefaults = .standard
-        }
-        
+    ///   - userDefaults: UserDefaults instance (default: .standard)
+    ///   - keyPrefix: Prefix for all storage keys to avoid conflicts (default: "tab-organizer.")
+    public init(userDefaults: UserDefaults = .standard, keyPrefix: String = "tab-organizer.") {
+        self.userDefaults = userDefaults
         self.keyPrefix = keyPrefix
         self.encoder = JSONEncoder()
-        self.encoder.dateEncodingStrategy = .iso8601
-        
         self.decoder = JSONDecoder()
-        self.decoder.dateDecodingStrategy = .iso8601
     }
-    
-    public func store<T: Codable & Sendable>(_ key: String, value: T) async throws {
+
+    // MARK: - SafariStorageAdapter Implementation
+
+    public func save<T: Codable>(_ value: T, forKey key: String) async throws {
+        let prefixedKey = keyPrefix + key
+
         do {
             let data = try encoder.encode(value)
-            
-            // Check quota
-            guard data.count <= maxDataSize else {
-                throw StorageError.quotaExceeded
+
+            // Check storage quota before saving
+            let currentSize = await estimateStorageSize()
+            let newSize = currentSize + data.count
+
+            if newSize > maxStorageSize {
+                throw StorageError.quotaExceeded(
+                    attemptedSize: data.count,
+                    availableSpace: maxStorageSize - currentSize
+                )
             }
-            
-            userDefaults.set(data, forKey: keyPrefix + key)
+
+            userDefaults.set(data, forKey: prefixedKey)
+
         } catch let error as StorageError {
             throw error
         } catch {
-            throw StorageError.encodingFailed(error.localizedDescription)
+            throw StorageError.encodingFailed(key: key, underlyingError: error.localizedDescription)
         }
     }
-    
-    public func retrieve<T: Codable & Sendable>(_ key: String) async throws -> T? {
-        guard let data = userDefaults.data(forKey: keyPrefix + key) else {
+
+    public func load<T: Codable>(forKey key: String, as type: T.Type) async throws -> T? {
+        let prefixedKey = keyPrefix + key
+
+        guard let data = userDefaults.data(forKey: prefixedKey) else {
             return nil
         }
-        
+
         do {
             return try decoder.decode(T.self, from: data)
+        } catch let DecodingError.typeMismatch(attemptedType, _) {
+            throw StorageError.typeMismatch(
+                key: key,
+                expectedType: String(describing: T.self),
+                actualType: String(describing: attemptedType)
+            )
         } catch {
-            throw StorageError.decodingFailed(error.localizedDescription)
+            throw StorageError.decodingFailed(key: key, underlyingError: error.localizedDescription)
         }
     }
-    
-    public func remove(_ key: String) async throws {
-        userDefaults.removeObject(forKey: keyPrefix + key)
+
+    public func remove(forKey key: String) async throws {
+        let prefixedKey = keyPrefix + key
+        userDefaults.removeObject(forKey: prefixedKey)
     }
-    
+
+    public func exists(forKey key: String) async -> Bool {
+        let prefixedKey = keyPrefix + key
+        return userDefaults.object(forKey: prefixedKey) != nil
+    }
+
     public func removeAll() async throws {
-        // Only remove keys with our prefix
-        let domain = userDefaults.dictionaryRepresentation()
-        for key in domain.keys where key.hasPrefix(keyPrefix) {
-            userDefaults.removeObject(forKey: key)
+        let keys = await allKeys()
+        for key in keys {
+            try await remove(forKey: key)
         }
     }
-    
-    public func exists(_ key: String) async -> Bool {
-        return userDefaults.object(forKey: keyPrefix + key) != nil
+
+    public func allKeys() async -> [String] {
+        let allKeys = userDefaults.dictionaryRepresentation().keys
+        return allKeys
+            .filter { $0.hasPrefix(keyPrefix) }
+            .map { String($0.dropFirst(keyPrefix.count)) }
+    }
+
+    // MARK: - Private Helpers
+
+    /// Estimates total storage size in bytes
+    private func estimateStorageSize() async -> Int {
+        let keys = await allKeys()
+        var totalSize = 0
+
+        for key in keys {
+            let prefixedKey = keyPrefix + key
+            if let data = userDefaults.data(forKey: prefixedKey) {
+                totalSize += data.count
+            }
+        }
+
+        return totalSize
     }
 }
