@@ -138,6 +138,22 @@ public struct TabGroup: Identifiable, Codable, Sendable {
         copy.updatedAt = Date()
         return copy
     }
+    
+    /// Creates a copy of this group with a new color
+    public func withColor(_ newColor: String) -> TabGroup {
+        var copy = self
+        copy.color = newColor
+        copy.updatedAt = Date()
+        return copy
+    }
+    
+    /// Creates a copy of this group with updated collapsed state
+    public func withCollapsed(_ isCollapsed: Bool) -> TabGroup {
+        var copy = self
+        copy.collapsed = isCollapsed
+        copy.updatedAt = Date()
+        return copy
+    }
 }
 
 // MARK: - Hashable & Equatable

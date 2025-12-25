@@ -41,7 +41,7 @@ public protocol StorageAdapter: Sendable {
 }
 
 /// Errors that can occur during storage operations
-public enum StorageError: Error, LocalizedError, Sendable {
+public enum StorageError: Error, LocalizedError, Sendable, Equatable {
     /// Failed to encode value to JSON
     case encodingFailed(String)
     

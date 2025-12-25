@@ -13,8 +13,8 @@ public actor DefaultTabGroupRepository: TabGroupRepository {
     ///
     /// - Parameters:
     ///   - storage: Storage adapter for persistence
-    ///   - storageKey: Key for storing groups (default: "tabOrganizer.groups")
-    public init(storage: StorageAdapter, storageKey: String = "tabOrganizer.groups") {
+    ///   - storageKey: Key for storing groups (default: "groups")
+    public init(storage: StorageAdapter, storageKey: String = "groups") {
         self.storage = storage
         self.storageKey = storageKey
     }

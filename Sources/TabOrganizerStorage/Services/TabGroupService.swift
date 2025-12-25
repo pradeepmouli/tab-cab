@@ -194,10 +194,7 @@ public final class TabGroupService: Sendable {
             throw StorageError.storageUnavailable("Group not found: \(groupID)")
         }
         
-        var updated = group
-        updated.color = newColor
-        updated.updatedAt = Date()
-        
+        let updated = group.withColor(newColor)
         try await repository.save(updated)
     }
     
@@ -210,10 +207,7 @@ public final class TabGroupService: Sendable {
             throw StorageError.storageUnavailable("Group not found: \(groupID)")
         }
         
-        var updated = group
-        updated.collapsed = !updated.collapsed
-        updated.updatedAt = Date()
-        
+        let updated = group.withCollapsed(!group.collapsed)
         try await repository.save(updated)
     }
     
