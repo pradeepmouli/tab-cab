@@ -98,11 +98,11 @@
 
 ---
 
-## Phase 3: User Story 1 - Manual Tab Group Organization (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Manual Tab Association (Priority: P1) 🎯 MVP
 
-**Goal**: Users can manually create, edit, and persist tab associations through the extension UI
+**Goal**: Users can manually create tab associations by dragging tabs together, with persistence across sessions
 
-**Independent Test**: Create 10+ tabs, organize into 2-3 groups, close Safari, reopen, verify groups persist with correct tabs
+**Independent Test**: Create 10+ tabs, drag tabs onto each other to form 2-3 associations, name them, close Safari, reopen, verify associations persist with correct tabs
 
 **TDD Approach for SwiftUI**: Per Constitution Principle III, tests must be written first. For SwiftUI components, this follows a preview-driven approach:
 1. Create SwiftUI Preview with realistic sample data BEFORE implementation
@@ -124,21 +124,22 @@
 - [X] T035 [US1] Implement TabTrackingService in Sources/TabOrganizerCore/Services/TabTrackingService.swift for lastViewedAt timestamps
 - [X] T036 [US1] Write TabAssociationService tests in Tests/TabOrganizerCoreTests/Services/TabAssociationServiceTests.swift with mock dependencies
 
-### US1 - UI Components
+### US1 - UI Components (Drag-to-Associate UX)
 
 - [X] T037 [P] [US1] Create ExtensionState @Observable class in Sources/TabOrganizerUI/State/ExtensionState.swift for top-level state
-- [X] T038 [P] [US1] Create TabCard SwiftUI component in Sources/TabOrganizerUI/Components/TabCard.swift with accessibilityLabel for tab title, accessibilityIdentifier for testing, and accessibilityHint for drag action
-- [X] T039 [P] [US1] Create GroupHeader SwiftUI component in Sources/TabOrganizerUI/Components/GroupHeader.swift with collapse/expand, accessibilityLabel for group name, and accessibilityHint for collapse/expand action
-- [X] T040 [US1] Create GroupListView in Sources/TabOrganizerUI/Views/GroupListView.swift showing all groups with drag-drop support, accessibilityLabel for list, and accessibilityElement grouping for each group
-- [X] T041 [US1] Create GroupEditorView in Sources/TabOrganizerUI/Views/GroupEditorView.swift for create/edit group with accessibilityLabel for text fields and buttons
-- [X] T042 [US1] Create TabDragView in Sources/TabOrganizerUI/Views/TabDragView.swift with drag-and-drop handlers and accessibility support for drag gestures
-- [X] T043 [US1] Wire GroupListView to SafariExtensionHandler popover in Sources/TabOrganizerExtension/SafariExtensionHandler.swift
+- [X] T038 [P] [US1] Create TabCard SwiftUI component in Sources/TabOrganizerUI/Components/TabCard.swift with drag gesture support, accessibilityLabel for tab title, accessibilityIdentifier for testing, and accessibilityHint for "drag onto another tab to create association"
+- [X] T039 [P] [US1] Create AssociationHeader SwiftUI component in Sources/TabOrganizerUI/Components/AssociationHeader.swift with collapse/expand, merge drop target, accessibilityLabel for association name, and accessibilityHint for collapse/expand action
+- [X] T040 [US1] Create AssociationListView in Sources/TabOrganizerUI/Views/AssociationListView.swift showing all associations with drag-drop support for tab-to-tab association creation, accessibilityLabel for list, and accessibilityElement grouping for each association
+- [X] T041 [US1] Create AssociationEditorView in Sources/TabOrganizerUI/Views/AssociationEditorView.swift for naming/renaming associations with accessibilityLabel for text fields and buttons
+- [ ] T042 [US1] Implement drag-and-drop logic: tab-onto-tab creates new association with naming prompt, tab-onto-association-member adds to association, tab-to-empty-area removes from association
+- [ ] T042.1 [US1] Implement association merge: dragging association header onto another association prompts for merge confirmation
+- [X] T043 [US1] Wire AssociationListView to SafariExtensionHandler popover in Sources/TabOrganizerExtension/SafariExtensionHandler.swift
 
 ### US1 - Testing & Integration
 
-- [X] T044 [US1] Write UI component tests in Tests/TabOrganizerUITests/Views/GroupListViewTests.swift
-- [X] T045 [US1] Write US1 integration test in Tests/TabOrganizerIntegrationTests/US1_ManualGroupingTests.swift (full create-persist-restore flow)
-- [X] T046 [US1] Manual accessibility testing with VoiceOver for all US1 UI components
+- [ ] T044 [US1] Write UI component tests in Tests/TabOrganizerUITests/Views/AssociationListViewTests.swift verifying drag-to-associate interactions
+- [ ] T045 [US1] Write US1 integration test in Tests/TabOrganizerIntegrationTests/US1_ManualAssociationTests.swift (full drag-create-name-persist-restore flow)
+- [ ] T046 [US1] Manual accessibility testing with VoiceOver for all US1 UI components, ensuring drag gestures are accessible
 
 ---
 
@@ -175,7 +176,7 @@
 
 - [ ] T061 [P] [US2] Create GroupSuggestion struct in Sources/TabOrganizerCore/Models/GroupSuggestion.swift
 - [ ] T062 [US2] Create SuggestionsView in Sources/TabOrganizerUI/Views/SuggestionsView.swift with preview, edit capabilities, explanation labels showing grouping rationale (FR-008: "Same domain", "Similar keywords: X, Y, Z"), and accessibility labels for all interactive elements
-- [ ] T063 [US2] Add "Suggest Groups" button to GroupListView toolbar in Sources/TabOrganizerUI/Views/GroupListView.swift
+- [ ] T063 [US2] Add "Suggest Associations" button to AssociationListView toolbar in Sources/TabOrganizerUI/Views/AssociationListView.swift
 - [ ] T064 [US2] Wire AI analysis to SuggestionsView with progress indicator in Sources/TabOrganizerUI/Views/SuggestionsView.swift
 - [ ] T065 [US2] Write US2 integration test in Tests/TabOrganizerIntegrationTests/US2_AIGroupingTests.swift (full suggest-accept flow)
 - [ ] T066 [US2] Performance test: verify AI analysis completes in <5s for 50 tabs in Tests/TabOrganizerAITests/PerformanceTests.swift

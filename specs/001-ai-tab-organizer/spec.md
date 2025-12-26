@@ -42,20 +42,22 @@
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - Manual Tab Group Organization (Priority: P1)
+### User Story 1 - Manual Tab Association (Priority: P1)
 
-Users can manually organize open tabs into named groups (e.g., "Work", "Research", "Shopping") through the Safari extension's UI. Groups persist across browser sessions and can be collapsed/expanded for cleaner browsing.
+Users can manually create tab associations by dragging one tab onto another. This creates a named association that groups related tabs together. Associations persist across browser sessions and can be collapsed/expanded for cleaner browsing.
 
-**Why this priority**: Core MVP functionality that provides immediate value. Even without AI features, manual grouping significantly reduces tab clutter and improves navigation. This establishes the foundation for all advanced features.
+**Why this priority**: Core MVP functionality that provides immediate value. The drag-to-associate interaction is intuitive and familiar from file managers. Even without AI features, manual association significantly reduces tab clutter and improves navigation. This establishes the foundation for all advanced features.
 
-**Independent Test**: Can be fully tested by creating 10+ tabs, manually organizing them into 2-3 groups, closing Safari, reopening, and verifying groups are intact with correct tabs.
+**Independent Test**: Can be fully tested by creating 10+ tabs, dragging tabs onto each other to form 2-3 associations, naming them, closing Safari, reopening, and verifying associations are intact with correct tabs.
 
 **Acceptance Scenarios**:
 
-1. **Given** I have 15 tabs open across different topics, **When** I open the extension and create a group named "Work" and drag 5 tabs into it, **Then** those tabs are visually grouped together and the group is labeled "Work"
-2. **Given** I have created tab associations in my current session, **When** I close and reopen Safari, **Then** all tab associations and their contained tabs are restored in the same state
-3. **Given** I have a tab association with 8 tabs, **When** I click the collapse button on the group, **Then** the tabs are hidden from view but remain accessible by expanding the group
-4. **Given** I want to remove tabs from a group, **When** I drag a tab out of the group, **Then** the tab becomes ungrouped and remains open in the main tab bar
+1. **Given** I have 15 tabs open across different topics, **When** I drag a GitHub tab onto a StackOverflow tab in the extension UI, **Then** a new association is created containing both tabs, and I'm prompted to name it (e.g., "Development")
+2. **Given** I have an existing association named "Work" with 3 tabs, **When** I drag another work-related tab onto any tab in the "Work" association, **Then** the dragged tab is added to the "Work" association
+3. **Given** I have created tab associations in my current session, **When** I close and reopen Safari, **Then** all tab associations and their contained tabs are restored in the same state
+4. **Given** I have a tab association with 8 tabs, **When** I click the collapse button on the association, **Then** the tabs are hidden from view but remain accessible by expanding the association
+5. **Given** I want to remove a tab from an association, **When** I drag a tab out of the association to an empty area, **Then** the tab becomes unassociated and remains open as a standalone tab
+6. **Given** I have two separate associations, **When** I drag one association header onto another association header, **Then** the system prompts me to merge the associations or cancel
 
 ---
 
@@ -205,14 +207,18 @@ When a new tab opens, the extension automatically assigns it to the most relevan
 
 ### Functional Requirements
 
-#### Tab Grouping
+#### Tab Association
 
-- **FR-001**: System MUST allow users to create named tab associations with custom colors
+- **FR-001**: System MUST allow users to create tab associations by dragging one tab onto another tab
+- **FR-001.1**: System MUST prompt users to name the association when two tabs are first dragged together
+- **FR-001.2**: System MUST allow users to assign custom colors to associations
 - **FR-002**: System MUST persist tab associations and their membership across browser sessions
-- **FR-003**: System MUST allow users to collapse/expand groups to show/hide contained tabs
-- **FR-004**: System MUST support drag-and-drop to move tabs between groups or remove tabs from groups
-- **FR-005**: System MUST allow users to rename or delete groups at any time
-- **FR-006**: System MUST prevent duplicate group names within the same window
+- **FR-003**: System MUST allow users to collapse/expand associations to show/hide contained tabs
+- **FR-004**: System MUST support drag-and-drop to add tabs to existing associations by dragging onto any member tab
+- **FR-004.1**: System MUST support drag-and-drop to remove tabs from associations by dragging to an empty area
+- **FR-004.2**: System MUST support merging associations by dragging one association header onto another
+- **FR-005**: System MUST allow users to rename or delete associations at any time
+- **FR-006**: System MUST prevent duplicate association names within the same window
 
 #### AI Analysis & Suggestions
 

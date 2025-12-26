@@ -47,7 +47,7 @@ TabCab/
 
 ## Summary
 
-Create a Safari extension that intelligently organizes browser tabs through manual grouping, AI-suggested grouping, context-aware highlighting, automatic rearrangement, and intelligent cleanup. Core MVP (P1) provides manual tab associations with persistence. Advanced features (P2-P5) leverage on-device ML for context analysis while maintaining strict privacy-first architecture.
+Create a Safari extension that intelligently organizes browser tabs through drag-to-associate manual grouping, AI-suggested grouping, context-aware highlighting, automatic rearrangement, and intelligent cleanup. Core MVP (P1) provides intuitive drag-and-drop tab associations with persistence. Advanced features (P2-P5) leverage on-device ML for context analysis while maintaining strict privacy-first architecture.
 
 **Technical Approach**: Swift Package Manager architecture with extension logic in libraries. Native SwiftUI for extension UI. Safari Extension APIs for tab manipulation. On-device NaturalLanguage framework for keyword extraction and CoreML for content classification (no external API calls). Local storage via Safari's secure APIs.
 
@@ -178,9 +178,9 @@ Sources/
 │
 ├── TabOrganizerUI/                   # SPM Library: SwiftUI views
 │   ├── Views/
-│   │   ├── GroupListView.swift       # Tab association list
-│   │   ├── GroupEditorView.swift     # Create/edit group
-│   │   ├── TabDragView.swift         # Drag-and-drop tab cards
+│   │   ├── AssociationListView.swift # Tab association list with drag-drop
+│   │   ├── AssociationEditorView.swift # Edit/rename associations
+│   │   ├── TabCard.swift             # Draggable tab card component
 │   │   ├── SuggestionsView.swift     # AI suggestions preview
 │   │   ├── CleanupView.swift         # Cleanup suggestions
 │   │   └── SettingsView.swift        # Extension settings
