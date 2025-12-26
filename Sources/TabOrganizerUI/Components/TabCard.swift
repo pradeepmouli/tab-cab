@@ -162,21 +162,21 @@ public struct TabCard: View {
 // MARK: - Draggable Extension
 
 extension TabCard {
-    /// Makes the card draggable for group assignment.
+    /// Makes the card draggable for association assignment.
     ///
-    /// **FR-004**: Support drag-and-drop to move tabs between groups
+    /// **FR-004**: Support drag-and-drop to move tabs between associations
     ///
-    /// - Parameter associationID: The current group ID (nil if ungrouped)
+    /// - Parameter associationID: The current association ID (nil if ungrouped)
     /// - Returns: Modified view with drag capability
-    public func draggable(fromGroupID associationID: UUID?) -> some View {
+    public func draggable(fromAssociationID associationID: UUID?) -> some View {
         self
             .onDrag {
                 // Create drag item with tab ID
                 let itemProvider = NSItemProvider(object: tab.id as NSString)
 
-                // Store source group ID in user info (for move operation)
-                if let groupID {
-                    itemProvider.suggestedName = groupID.uuidString
+                // Store source association ID in suggested name (for move operation)
+                if let associationID {
+                    itemProvider.suggestedName = associationID.uuidString
                 }
 
                 return itemProvider

@@ -234,7 +234,7 @@ public struct GroupListView: View {
                                 activateTab(tab)
                             }
                         )
-                        .draggable(fromGroupID: group.id)
+                        .draggable(fromAssociationID: group.id)
                     }
                 }
             }
@@ -272,7 +272,7 @@ public struct GroupListView: View {
                         activateTab(tab)
                     }
                 )
-                .draggable(fromGroupID: Optional<UUID>.none)
+                .draggable(fromAssociationID: Optional<UUID>.none)
             }
         } header: {
             HStack {
