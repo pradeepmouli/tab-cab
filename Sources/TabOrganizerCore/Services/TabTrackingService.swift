@@ -119,16 +119,13 @@ public final class TabTrackingService {
     ///
     /// Call this on service initialization to restore state.
     public func loadViewHistory() async throws {
-        guard let data = try await storage.read(key: storageKey) else {
+        guard let history = try await storage.load(forKey: storageKey, as: [String: Date].self) else {
             // No history yet
             viewHistory = [:]
             return
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        viewHistory = try decoder.decode([String: Date].self, from: data)
+        viewHistory = history
     }
 
     /// Clears all view history.
@@ -136,7 +133,7 @@ public final class TabTrackingService {
     /// Used for testing or user-initiated reset.
     public func clearAllHistory() async throws {
         viewHistory.removeAll()
-        try await storage.delete(key: storageKey)
+        try await storage.remove(forKey: storageKey)
     }
 
     /// Gets statistics about tab activity.
@@ -167,12 +164,7 @@ public final class TabTrackingService {
 
     /// Persists view history to storage.
     private func persistViewHistory() async throws {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        encoder.outputFormatting = [.sortedKeys, .prettyPrinted]
-
-        let data = try encoder.encode(viewHistory)
-        try await storage.write(key: storageKey, data: data)
+        try await storage.save(viewHistory, forKey: storageKey)
     }
 }
 

@@ -29,25 +29,25 @@ Safari Extensions provide comprehensive tab manipulation through the `SFSafariTa
 - **Tab Access**: `SFSafariWindow.getAllTabs()` retrieves all tabs in a window
 - **Tab Properties**: Access to `title`, `url` (with permission), `isActive`
 - **Tab Manipulation**: Can activate tabs, close tabs, open new tabs
-- **Tab Groups**: Native Safari tab groups are NOT directly accessible via Extension APIs as of Safari 15-17
+- **Tab Groups**: Native Safari tab associations are NOT directly accessible via Extension APIs as of Safari 15-17
 - **Custom Groups**: Must implement custom grouping via persistent storage and UI overlay
 
 ### Rationale
 
-Safari Extensions are sandboxed and have limited tab group API access. Native Safari tab groups (introduced in macOS Big Sur) are managed by Safari itself and not exposed to extensions. This means:
+Safari Extensions are sandboxed and have limited tab association API access. Native Safari tab associations (introduced in macOS Big Sur) are managed by Safari itself and not exposed to extensions. This means:
 
-1. **We cannot read or modify native Safari tab groups** - must build independent grouping system
+1. **We cannot read or modify native Safari tab associations** - must build independent grouping system
 2. **We CAN track tabs by URL/title** - sufficient for our AI grouping and context features
 3. **We CAN use custom UI** - extension popover can display our own group interface
 
 **Alternatives Considered**:
-- ❌ Wait for Apple to expose native tab group APIs (no timeline, blocks MVP)
+- ❌ Wait for Apple to expose native tab association APIs (no timeline, blocks MVP)
 - ❌ Use AppleScript/JavaScript for Automation (security issues, not sandboxed)
 - ✅ Build independent grouping system with custom UI (full control, testable)
 
 ### Implementation Impact
 
-- Store tab groups in our own persistence layer (Safari local storage)
+- Store tab associations in our own persistence layer (Safari local storage)
 - Build custom SwiftUI UI for group management (popover + toolbar)
 - Map tabs to groups by URL matching on each window refresh
 - Accept limitation: groups won't appear in Safari's native tab bar (only in extension UI)
@@ -60,12 +60,12 @@ Safari Extensions are sandboxed and have limited tab group API access. Native Sa
 
 ### Decision
 
-Safari Extensions CAN access Keychain with proper entitlements, but it's **NOT NEEDED** for our MVP features (P1-P5). All data (tab groups, settings, tracking) can use Safari's local storage APIs without sensitive data concerns.
+Safari Extensions CAN access Keychain with proper entitlements, but it's **NOT NEEDED** for our MVP features (P1-P5). All data (tab associations, settings, tracking) can use Safari's local storage APIs without sensitive data concerns.
 
 ### Rationale
 
 Our feature stores:
-- Tab group names, colors, tab URLs (not sensitive - users already see these in browser)
+- Tab association names, colors, tab URLs (not sensitive - users already see these in browser)
 - User settings (thresholds, toggles - not sensitive)
 - Tab view timestamps (not sensitive)
 
@@ -79,7 +79,7 @@ Our feature stores:
 ### Implementation Impact
 
 - Use `UserDefaults` suite with App Group for extension-app communication
-- Use Safari's `localStorage` equivalent for tab group data
+- Use Safari's `localStorage` equivalent for tab association data
 - No Keychain entitlements needed in MVP
 - Document Keychain as future enhancement for cloud sync features
 
@@ -114,7 +114,7 @@ Private browsing tabs are explicitly opted out of tracking by users. Including t
 
 ### Implementation Impact
 
-- Add `isPrivate` check at entry point of all services (TabGroupService, ContextAnalyzer, etc.)
+- Add `isPrivate` check at entry point of all services (TabAssociationService, ContextAnalyzer, etc.)
 - Unit tests must verify private tab exclusion for all features
 - UI must show "X private tabs excluded" message when applicable
 - Document in privacy policy that private tabs are never processed
@@ -167,7 +167,7 @@ final class MockTabManager: TabManaging {
 @Test func testGroupCreation() async throws {
     let mockTabs = MockTabManager()
     mockTabs.stubbedTabs = [/* test data */]
-    let service = TabGroupService(tabManager: mockTabs)
+    let service = TabAssociationService(tabManager: mockTabs)
     // ... test logic
 }
 ```
@@ -367,7 +367,7 @@ All 6 principles remain **FULLY COMPLIANT** after research:
 
 ### Risk Mitigation
 
-- **Risk**: Native tab group integration not possible → **Mitigation**: Build superior custom UI with AI features
+- **Risk**: Native tab association integration not possible → **Mitigation**: Build superior custom UI with AI features
 - **Risk**: Testing Safari APIs is complex → **Mitigation**: Protocol-oriented architecture with comprehensive mocks
 - **Risk**: Permission denial breaks extension → **Mitigation**: Graceful degradation with clear UI messaging
 

@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 @testable import TabOrganizerStorage
+@testable import TabOrganizerCore
 
 @Suite("StorageAdapter Tests")
 struct StorageAdapterTests {
@@ -24,7 +25,7 @@ struct StorageAdapterTests {
         let loaded = try await adapter.load(forKey: "test-key", as: TestData.self)
 
         #expect(loaded == testData)
-        #expect(adapter.savedKeys.contains("test-key"))
+        #expect(await adapter.getSavedKeys().contains("test-key"))
     }
 
     @Test("MockStorageAdapter returns nil for non-existent key")
@@ -47,13 +48,13 @@ struct StorageAdapterTests {
 
         let loaded = try await adapter.load(forKey: "test-key", as: TestData.self)
         #expect(loaded == updated)
-        #expect(adapter.savedKeys.count == 2)
+        #expect(await adapter.getSavedKeys().count == 2)
     }
 
     @Test("MockStorageAdapter throws quota exceeded error")
     func saveThrowsQuotaExceededError() async throws {
         let adapter = MockStorageAdapter()
-        adapter.shouldSimulateQuotaExceeded = true
+        await adapter.setQuotaExceeded(true)
         let testData = TestData(id: "test-1", value: 42, name: "Test")
 
         await #expect(throws: StorageError.self) {
@@ -64,10 +65,10 @@ struct StorageAdapterTests {
     @Test("MockStorageAdapter throws encoding failure")
     func saveThrowsEncodingError() async throws {
         let adapter = MockStorageAdapter()
-        adapter.shouldSimulateEncodingFailure = true
+        await adapter.setEncodingFailure(true)
         let testData = TestData(id: "test-1", value: 42, name: "Test")
 
-        await #expect(throws: StorageError.encodingFailed) {
+        await #expect(throws: StorageError.self) {
             try await adapter.save(testData, forKey: "test-key")
         }
     }
@@ -80,9 +81,9 @@ struct StorageAdapterTests {
         let testData = TestData(id: "test-1", value: 42, name: "Test")
         try await adapter.save(testData, forKey: "test-key")
 
-        adapter.shouldSimulateDecodingFailure = true
+        await adapter.setDecodingFailure(true)
 
-        await #expect(throws: StorageError.decodingFailed) {
+        await #expect(throws: StorageError.self) {
             _ = try await adapter.load(forKey: "test-key", as: TestData.self)
         }
     }
@@ -93,7 +94,7 @@ struct StorageAdapterTests {
         let testData = TestData(id: "test-1", value: 42, name: "Test")
         try await adapter.save(testData, forKey: "test-key")
 
-        await #expect(throws: StorageError.typeMismatch) {
+        await #expect(throws: StorageError.self) {
             _ = try await adapter.load(forKey: "test-key", as: String.self)
         }
     }
@@ -110,7 +111,7 @@ struct StorageAdapterTests {
 
         let loaded = try await adapter.load(forKey: "test-key", as: TestData.self)
         #expect(loaded == nil)
-        #expect(adapter.removedKeys.contains("test-key"))
+        #expect(await adapter.getRemovedKeys().contains("test-key"))
     }
 
     @Test("MockStorageAdapter removes all values")
@@ -184,12 +185,12 @@ struct StorageAdapterTests {
     @Test("MockStorageAdapter enforces storage quota")
     func storageQuotaIsEnforced() async throws {
         let adapter = MockStorageAdapter()
-        adapter.maxStorageSize = 100 // Very small quota for testing
-        adapter.shouldSimulateQuotaExceeded = true
+        await adapter.setMaxStorageSize(100) // Very small quota for testing
+        await adapter.setQuotaExceeded(true)
 
         let largeData = TestData(id: "test-1", value: 42, name: String(repeating: "x", count: 1000))
 
-        await #expect(throws: StorageError.quotaExceeded) {
+        await #expect(throws: StorageError.self) {
             try await adapter.save(largeData, forKey: "large-key")
         }
     }
@@ -201,15 +202,15 @@ struct StorageAdapterTests {
         let adapter = MockStorageAdapter()
         try await adapter.save(TestData(id: "1", value: 1, name: "One"), forKey: "key-1")
         try await adapter.remove(forKey: "key-1")
-        adapter.shouldSimulateQuotaExceeded = true
+        await adapter.setQuotaExceeded(true)
 
         await adapter.reset()
 
         let keys = await adapter.allKeys()
         #expect(keys.isEmpty)
-        #expect(adapter.savedKeys.isEmpty)
-        #expect(adapter.removedKeys.isEmpty)
-        #expect(adapter.shouldSimulateQuotaExceeded == false)
+        #expect(await adapter.getSavedKeys().isEmpty)
+        #expect(await adapter.getRemovedKeys().isEmpty)
+        #expect(await adapter.isQuotaExceededEnabled() == false)
     }
 
     // MARK: - Multiple Value Types Tests

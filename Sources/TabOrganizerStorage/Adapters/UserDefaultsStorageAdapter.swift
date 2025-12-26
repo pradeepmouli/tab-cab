@@ -1,10 +1,11 @@
 import Foundation
+import TabOrganizerCore
 
 /// UserDefaults-backed storage adapter for Safari Extension
 ///
 /// Uses JSON encoding for all values to ensure Sendable compliance.
 /// Monitors storage size to prevent quota exceeded errors (5MB Safari limit).
-public actor UserDefaultsStorageAdapter: SafariStorageAdapter {
+public actor UserDefaultsStorageAdapter: SafariStorageAdapter, StorageAdapter {
 
     // MARK: - Properties
 
@@ -34,7 +35,7 @@ public actor UserDefaultsStorageAdapter: SafariStorageAdapter {
 
     // MARK: - SafariStorageAdapter Implementation
 
-    public func save<T: Codable>(_ value: T, forKey key: String) async throws {
+    public func save<T: Codable & Sendable>(_ value: T, forKey key: String) async throws {
         let prefixedKey = keyPrefix + key
 
         do {
@@ -60,7 +61,7 @@ public actor UserDefaultsStorageAdapter: SafariStorageAdapter {
         }
     }
 
-    public func load<T: Codable>(forKey key: String, as type: T.Type) async throws -> T? {
+    public func load<T: Codable & Sendable>(forKey key: String, as type: T.Type) async throws -> T? {
         let prefixedKey = keyPrefix + key
 
         guard let data = userDefaults.data(forKey: prefixedKey) else {
@@ -102,6 +103,24 @@ public actor UserDefaultsStorageAdapter: SafariStorageAdapter {
         return allKeys
             .filter { $0.hasPrefix(keyPrefix) }
             .map { String($0.dropFirst(keyPrefix.count)) }
+    }
+
+    // MARK: - StorageAdapter Implementation
+
+    public func store<T: Codable & Sendable>(_ key: String, value: T) async throws {
+        try await save(value, forKey: key)
+    }
+
+    public func retrieve<T: Codable & Sendable>(_ key: String) async throws -> T? {
+        return try await load(forKey: key, as: T.self)
+    }
+
+    public func remove(_ key: String) async throws {
+        try await remove(forKey: key)
+    }
+
+    public func exists(_ key: String) async -> Bool {
+        return await exists(forKey: key)
     }
 
     // MARK: - Private Helpers

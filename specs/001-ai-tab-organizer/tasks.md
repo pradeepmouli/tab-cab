@@ -15,6 +15,31 @@
 
 ---
 
+## Phase 0: Project Initialization and Renaming
+
+**Purpose**: Rename template project to TabCab and configure extension target
+
+**Status**: ✅ Completed 2025-12-25
+
+- [X] T000 Rename project from SwiftTemplateMacOS to TabCab (workspace, xcodeproj, folders, schemes)
+- [X] T000.1 Update Config/Shared.xcconfig with TabCab product name and bundle ID (com.pmouli.TabCab)
+- [X] T000.2 Update Config/TabCab.entitlements (renamed from SwiftTemplateMacOS.entitlements)
+- [X] T000.3 Rename main app Swift file to TabCabApp.swift and update struct name
+- [X] T000.4 Update all xcscheme files with TabCab target names
+- [X] T000.5 Replace all SwiftTemplateMacOS references in project.pbxproj
+- [X] T000.6 Create TabCabExtension target (Safari App Extension) in Xcode project
+- [X] T000.7 Copy extension source files to TabCab/ folder (SafariExtensionHandler.swift, UI/PopoverView.swift)
+- [X] T000.8 Add Swift Package dependencies to TabCabExtension target (TabOrganizerUI, Core, Storage, SafariAPI)
+- [X] T000.9 Configure extension Frameworks build phase with package product dependencies
+- [X] T000.10 Remove unavailable API methods from SafariExtensionHandler (windowOpened, windowClosed)
+- [X] T000.11 Remove preview code from PopoverView (MockStorageAdapter not available in extension target)
+- [X] T000.12 Verify project builds successfully (TabCab.app + TabCabExtension.appex)
+- [X] T000.13 Update deployment targets to macOS 26.0+ and iOS 26.0+ for Liquid Glass and modern SwiftUI features
+
+**Known Issue**: Extension embedding via "Embed Foundation Extensions" build phase needs manual verification in Xcode GUI
+
+---
+
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: Project initialization and Safari Extension foundation
@@ -23,7 +48,7 @@
 - [X] T002 Create Xcode workspace TabOrganizer.xcworkspace linking Package.swift
 - [X] T003 Create Safari Extension target TabOrganizerExtension in Xcode project
 - [X] T004 [P] Configure Config/TabOrganizer.entitlements with Safari Extension permissions (tabs, windows, storage)
-- [X] T005 [P] Configure Config/Shared.xcconfig with build settings (Swift 6.1, strict concurrency, macOS 15.0+, iOS 18.0+)
+- [X] T005 [P] Configure Config/Shared.xcconfig with build settings (Swift 6.1, strict concurrency, macOS 26.0+, iOS 26.0+)
 - [X] T006 Create Sources/TabOrganizerExtension/Info.plist with extension metadata and permissions
 - [X] T007 [P] Create .swiftlint.yml for code style enforcement
 - [X] T008 [P] Add swift-log dependency to Package.swift for logging
@@ -56,7 +81,7 @@
 
 ### Core Domain Models (Foundation for all entities)
 
-- [X] T021 Define TabGroup struct in Sources/TabOrganizerCore/Models/TabGroup.swift with validation
+- [X] T021 Define TabAssociation struct in Sources/TabOrganizerCore/Models/TabAssociation.swift with validation
 - [X] T022 Define Tab struct in Sources/TabOrganizerCore/Models/Tab.swift
 - [X] T023 Define UserSettings struct in Sources/TabOrganizerCore/Models/UserSettings.swift with defaults
 - [X] T024 [P] Define ContextAnalysis struct in Sources/TabOrganizerCore/Models/ContextAnalysis.swift
@@ -75,7 +100,7 @@
 
 ## Phase 3: User Story 1 - Manual Tab Group Organization (Priority: P1) 🎯 MVP
 
-**Goal**: Users can manually create, edit, and persist tab groups through the extension UI
+**Goal**: Users can manually create, edit, and persist tab associations through the extension UI
 
 **Independent Test**: Create 10+ tabs, organize into 2-3 groups, close Safari, reopen, verify groups persist with correct tabs
 
@@ -88,16 +113,16 @@
 
 ### US1 - Data & Persistence
 
-- [X] T030 [P] [US1] Define TabGroupRepository protocol in Sources/TabOrganizerStorage/Protocols/TabGroupRepository.swift
+- [X] T030 [P] [US1] Define TabAssociationRepository protocol in Sources/TabOrganizerStorage/Protocols/TabAssociationRepository.swift
 - [X] T031 [US1] Implement SafariGroupRepository in Sources/TabOrganizerStorage/Repositories/SafariGroupRepository.swift with duplicate name prevention
 - [X] T032 [US1] Implement MockGroupRepository in Tests/TabOrganizerStorageTests/Mocks/MockGroupRepository.swift
-- [X] T033 [US1] Write TabGroupRepository tests in Tests/TabOrganizerStorageTests/TabGroupRepositoryTests.swift (save, delete, getAll, observeGroups)
+- [X] T033 [US1] Write TabAssociationRepository tests in Tests/TabOrganizerStorageTests/TabAssociationRepositoryTests.swift (save, delete, getAll, observeGroups)
 
 ### US1 - Business Logic
 
-- [X] T034 [US1] Implement TabGroupService in Sources/TabOrganizerCore/Services/TabGroupService.swift with createGroup, deleteGroup, updateGroup, getAllGroups
+- [X] T034 [US1] Implement TabAssociationService in Sources/TabOrganizerCore/Services/TabAssociationService.swift with createGroup, deleteGroup, updateGroup, getAllGroups
 - [X] T035 [US1] Implement TabTrackingService in Sources/TabOrganizerCore/Services/TabTrackingService.swift for lastViewedAt timestamps
-- [X] T036 [US1] Write TabGroupService tests in Tests/TabOrganizerCoreTests/Services/TabGroupServiceTests.swift with mock dependencies
+- [X] T036 [US1] Write TabAssociationService tests in Tests/TabOrganizerCoreTests/Services/TabAssociationServiceTests.swift with mock dependencies
 
 ### US1 - UI Components
 

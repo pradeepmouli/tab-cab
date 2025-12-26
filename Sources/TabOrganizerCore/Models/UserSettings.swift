@@ -76,7 +76,7 @@ public struct UserSettings: Codable, Sendable, Equatable {
     // MARK: - Defaults
 
     /// Default user settings
-    public static let `default` = UserSettings(
+    public static let `default` = try! UserSettings(
         contextHighlightingEnabled: true,
         autoRearrangementEnabled: false,
         cleanupSuggestionsEnabled: true,
@@ -177,6 +177,23 @@ public struct UserSettings: Codable, Sendable, Equatable {
         )
     }
 
+    /// Returns settings with updated cleanup suggestions toggle
+    public func withCleanupSuggestions(_ enabled: Bool) throws -> UserSettings {
+        try UserSettings(
+            contextHighlightingEnabled: contextHighlightingEnabled,
+            autoRearrangementEnabled: autoRearrangementEnabled,
+            cleanupSuggestionsEnabled: enabled,
+            inactivityThreshold: inactivityThreshold,
+            autoCloseEnabled: autoCloseEnabled,
+            autoCloseUngroupedOnly: autoCloseUngroupedOnly,
+            theme: theme,
+            showFavicons: showFavicons,
+            showTabCounts: showTabCounts,
+            aiAnalysisConsent: aiAnalysisConsent,
+            excludedDomains: excludedDomains
+        )
+    }
+
     /// Returns settings with updated inactivity threshold
     public func withInactivityThreshold(_ threshold: TimeInterval) throws -> UserSettings {
         try UserSettings(
@@ -186,6 +203,23 @@ public struct UserSettings: Codable, Sendable, Equatable {
             inactivityThreshold: threshold,
             autoCloseEnabled: autoCloseEnabled,
             autoCloseUngroupedOnly: autoCloseUngroupedOnly,
+            theme: theme,
+            showFavicons: showFavicons,
+            showTabCounts: showTabCounts,
+            aiAnalysisConsent: aiAnalysisConsent,
+            excludedDomains: excludedDomains
+        )
+    }
+
+    /// Returns settings with updated auto-close ungrouped only toggle
+    public func withAutoCloseUngroupedOnly(_ enabled: Bool) throws -> UserSettings {
+        try UserSettings(
+            contextHighlightingEnabled: contextHighlightingEnabled,
+            autoRearrangementEnabled: autoRearrangementEnabled,
+            cleanupSuggestionsEnabled: cleanupSuggestionsEnabled,
+            inactivityThreshold: inactivityThreshold,
+            autoCloseEnabled: autoCloseEnabled,
+            autoCloseUngroupedOnly: enabled,
             theme: theme,
             showFavicons: showFavicons,
             showTabCounts: showTabCounts,

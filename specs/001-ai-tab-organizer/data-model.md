@@ -6,7 +6,7 @@
 
 ## Entity Definitions
 
-### TabGroup
+### TabAssociation
 
 Represents a named collection of tabs created by the user or AI suggestions.
 
@@ -53,7 +53,7 @@ Represents a Safari tab tracked by the extension.
 - `isPinned: Bool` - Whether this tab is pinned (excludes from rearrangement)
 - `isPrivate: Bool` - Whether this tab is in private browsing mode
 - `lastViewedAt: Date` - Timestamp of last user interaction with this tab
-- `groupID: UUID?` - Optional reference to parent TabGroup
+- `groupID: UUID?` - Optional reference to parent TabAssociation
 
 **Validation Rules**:
 - `url` must be valid URL format
@@ -62,7 +62,7 @@ Represents a Safari tab tracked by the extension.
 - `isPrivate` tabs MUST NOT be stored (filtered at ingestion)
 
 **Relationships**:
-- Many-to-one with `TabGroup` (multiple tabs belong to one group)
+- Many-to-one with `TabAssociation` (multiple tabs belong to one group)
 - Self-referential for similarity (tracked in ContextAnalysis)
 
 **Lifecycle**:
@@ -196,7 +196,7 @@ enum CleanupCriteria: String, Codable {
 
 ```
 ┌─────────────┐         ┌─────────────┐
-│  TabGroup   │◄───────┤│     Tab     │
+│  TabAssociation   │◄───────┤│     Tab     │
 │             │ 1     * ││             │
 │ - id        │         ││ - id        │
 │ - name      │         ││ - url       │
@@ -233,9 +233,9 @@ enum CleanupCriteria: String, Codable {
 
 ### Persistence Strategy
 
-**TabGroup & Tab**:
+**TabAssociation & Tab**:
 - Store in Safari local storage (JSON serialization)
-- Key: `tabOrganizer.groups.{windowID}` → Array of TabGroup
+- Key: `tabOrganizer.groups.{windowID}` → Array of TabAssociation
 - Indexed by window to support multi-window
 - Updated on any group/tab change (debounced to 500ms)
 
@@ -267,7 +267,7 @@ enum CleanupCriteria: String, Codable {
 
 | Entity | Required Fields | Unique Constraints | Indexes |
 |--------|----------------|-------------------|---------|
-| TabGroup | id, name, tabIDs | name (per window) | id |
+| TabAssociation | id, name, tabIDs | name (per window) | id |
 | Tab | id, url, domain | id | id, groupID |
 | ContextAnalysis | id, sourceTabID | - | sourceTabID |
 | CleanupSuggestion | id, suggestedTabIDs | - | id, createdAt |

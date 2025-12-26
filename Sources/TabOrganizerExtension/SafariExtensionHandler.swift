@@ -56,7 +56,7 @@ final class SafariExtensionHandler: SFSafariExtensionHandler {
 
     /// Called when the toolbar item is clicked.
     ///
-    /// Shows the extension popover with tab group management UI.
+    /// Shows the extension popover with tab association management UI.
     override func toolbarItemClicked(in window: SFSafariWindow) {
         logger.debug("Toolbar item clicked")
 
@@ -117,10 +117,10 @@ final class SafariExtensionHandler: SFSafariExtensionHandler {
     /// Handles messages from content scripts.
     ///
     /// Message types:
-    /// - "getTabGroups": Returns current tab groups for UI display
-    /// - "createGroup": Creates a new tab group
+    /// - "getTabAssociations": Returns current tab associations for UI display
+    /// - "createGroup": Creates a new tab association
     /// - "updateGroup": Updates existing group properties
-    /// - "deleteGroup": Removes a tab group
+    /// - "deleteGroup": Removes a tab association
     /// - "suggestGroups": Triggers AI grouping analysis
     /// - "highlightContext": Triggers context-aware highlighting
     ///
@@ -144,21 +144,21 @@ final class SafariExtensionHandler: SFSafariExtensionHandler {
         // - US5 (P5): Cleanup suggestions
 
         switch messageName {
-        case "getTabGroups":
-            logger.debug("Get tab groups requested")
-            // TODO: T034 - Call TabGroupService.getAllGroups()
+        case "getTabAssociations":
+            logger.debug("Get tab associations requested")
+            // TODO: T034 - Call TabAssociationService.getAllAssociations()
 
         case "createGroup":
             logger.debug("Create group requested")
-            // TODO: T034 - Call TabGroupService.createGroup()
+            // TODO: T034 - Call TabAssociationService.createGroup()
 
         case "updateGroup":
             logger.debug("Update group requested")
-            // TODO: T034 - Call TabGroupService.updateGroup()
+            // TODO: T034 - Call TabAssociationService.updateGroup()
 
         case "deleteGroup":
             logger.debug("Delete group requested")
-            // TODO: T034 - Call TabGroupService.deleteGroup()
+            // TODO: T034 - Call TabAssociationService.deleteGroup()
 
         case "suggestGroups":
             logger.debug("AI grouping suggestions requested")
@@ -224,7 +224,7 @@ final class SafariExtensionHandler: SFSafariExtensionHandler {
         logger.debug("Processing new window")
 
         // TODO: Phase 3+ - Initialize window-specific state
-        // - Load tab groups for this window
+        // - Load tab associations for this window
         // - Set up tab tracking
     }
 

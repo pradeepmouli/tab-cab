@@ -166,7 +166,7 @@ let score = await engine.computeSimilarity(
 
 ## GroupingSuggester Protocol
 
-Generates AI-powered tab grouping suggestions.
+Generates AI-powered tab associationing suggestions.
 
 ### suggestGroups(for:)
 
@@ -191,7 +191,7 @@ func suggestGroups(for tabs: [TabInfo]) async throws -> [GroupSuggestion]
 - Clusters tabs by domain similarity and keyword overlap
 - Generates descriptive group names (e.g., "GitHub Projects", "News Articles")
 - Suggests 2-5 groups (avoids over-grouping)
-- Each suggested group has 3+ tabs (no single-tab groups)
+- Each suggested group has 3+ tabs (no single-tab associations)
 - Confidence score indicates quality of suggestions
 
 **Algorithm**:

@@ -2,7 +2,7 @@
 //  TabDragView.swift
 //  TabOrganizerUI
 //
-//  Drag-and-drop handling view for tab group organization.
+//  Drag-and-drop handling view for tab association organization.
 //  Provides drop zones for groups and handles tab movement between groups.
 //
 
@@ -33,7 +33,7 @@ public struct TabDragView<Content: View>: View {
     let content: Content
 
     /// The group this view represents (nil for ungrouped area)
-    let targetGroup: TabGroup?
+    let targetGroup: TabAssociation?
 
     /// Callback when a tab is dropped
     let onTabDropped: (String, UUID?, UUID?) -> Void
@@ -51,7 +51,7 @@ public struct TabDragView<Content: View>: View {
     ///   - onTabDropped: Callback with (tabID, fromGroupID, toGroupID)
     ///   - content: The content to wrap
     public init(
-        targetGroup: TabGroup?,
+        targetGroup: TabAssociation?,
         onTabDropped: @escaping (String, UUID?, UUID?) -> Void,
         @ViewBuilder content: () -> Content
     ) {
@@ -160,7 +160,7 @@ extension TabDragView where Content == AnyView {
     ///   - onTabDropped: Drop callback
     ///   - content: The content view
     public static func groupDropZone(
-        group: TabGroup,
+        group: TabAssociation,
         onTabDropped: @escaping (String, UUID?, UUID?) -> Void,
         @ViewBuilder content: () -> some View
     ) -> TabDragView {
@@ -215,7 +215,7 @@ extension View {
 
 #if DEBUG
 #Preview("Drop Zone - Group") {
-    let sampleGroup = TabGroup(
+    let sampleGroup = try! TabAssociation(
         id: UUID(),
         name: "Work",
         color: "#0066CC",
@@ -226,7 +226,7 @@ extension View {
         metadata: [:]
     )
 
-    return TabDragView(
+    TabDragView(
         targetGroup: sampleGroup,
         onTabDropped: { tabID, fromID, toID in
             print("Dropped \(tabID) from \(fromID?.uuidString ?? "none") to \(toID?.uuidString ?? "none")")
@@ -281,7 +281,7 @@ extension View {
 
 #Preview("Multiple Drop Zones") {
     let groups = [
-        TabGroup(
+        try! TabAssociation(
             id: UUID(),
             name: "Work",
             color: "#0066CC",
@@ -291,7 +291,7 @@ extension View {
             tabIDs: [],
             metadata: [:]
         ),
-        TabGroup(
+        try! TabAssociation(
             id: UUID(),
             name: "Research",
             color: "#00CC66",
@@ -301,7 +301,7 @@ extension View {
             tabIDs: [],
             metadata: [:]
         ),
-        TabGroup(
+        try! TabAssociation(
             id: UUID(),
             name: "Shopping",
             color: "#FF6600",
@@ -313,7 +313,7 @@ extension View {
         )
     ]
 
-    return VStack(spacing: 16) {
+    VStack(spacing: 16) {
         ForEach(groups) { group in
             TabDragView(
                 targetGroup: group,

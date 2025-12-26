@@ -6,16 +6,17 @@
 // ==========================================
 // Project Identity
 // ==========================================
-PRODUCT_NAME = SwiftTemplateMacOS
-PRODUCT_DISPLAY_NAME = SwiftTemplate macOS
-PRODUCT_BUNDLE_IDENTIFIER = com.pmouli.SwiftTemplateMacOS
+PRODUCT_NAME = TabCab
+PRODUCT_DISPLAY_NAME = TabCab
+PRODUCT_BUNDLE_IDENTIFIER = com.pmouli.TabCab
 MARKETING_VERSION = 1.0.0
 CURRENT_PROJECT_VERSION = 1
 
 // ==========================================
 // Platform Configuration
 // ==========================================
-MACOSX_DEPLOYMENT_TARGET = 15.4
+MACOSX_DEPLOYMENT_TARGET = 26.0
+IPHONEOS_DEPLOYMENT_TARGET = 26.0
 
 // ==========================================
 // Info PLIST
@@ -25,5 +26,5 @@ GENERATE_INFOPLIST_FILE = YES
 // ==========================================
 // Entitlements
 // ==========================================
-// AI agents can modify Config/SwiftTemplateMacOS.entitlements to add capabilities
-CODE_SIGN_ENTITLEMENTS = Config/SwiftTemplateMacOS.entitlements
+// AI agents can modify Config/TabCab.entitlements to add capabilities
+CODE_SIGN_ENTITLEMENTS = Config/TabCab.entitlements

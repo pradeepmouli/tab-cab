@@ -1,25 +1,25 @@
 # Storage API Contract
 
-**Purpose**: Define persistence layer APIs for tab groups, settings, and cleanup history
+**Purpose**: Define persistence layer APIs for tab associations, settings, and cleanup history
 **Implementation**: `TabOrganizerStorage` library
 
 ---
 
-## TabGroupRepository Protocol
+## TabAssociationRepository Protocol
 
-Manages persistence of TabGroup entities.
+Manages persistence of TabAssociation entities.
 
 ### saveGroup(_:)
 
 **Signature**:
 ```swift
-func saveGroup(_ group: TabGroup) async throws
+func saveGroup(_ group: TabAssociation) async throws
 ```
 
-**Description**: Create or update a tab group in persistent storage.
+**Description**: Create or update a tab association in persistent storage.
 
 **Parameters**:
-- `group: TabGroup` - Group to save (uses `id` for update vs. create)
+- `group: TabAssociation` - Group to save (uses `id` for update vs. create)
 
 **Throws**:
 - `StorageError.duplicateName` - Group with same name already exists in window
@@ -36,7 +36,7 @@ func saveGroup(_ group: TabGroup) async throws
 
 **Example**:
 ```swift
-let group = TabGroup(
+let group = TabAssociation(
     id: UUID(),
     name: "Work",
     color: "#007AFF",
@@ -54,7 +54,7 @@ try await repository.saveGroup(group)
 func deleteGroup(id: UUID) async throws
 ```
 
-**Description**: Remove a tab group from storage.
+**Description**: Remove a tab association from storage.
 
 **Parameters**:
 - `id: UUID` - Group identifier to delete
@@ -80,15 +80,15 @@ try await repository.deleteGroup(id: groupID)
 
 **Signature**:
 ```swift
-func getAllGroups(windowID: String) async throws -> [TabGroup]
+func getAllGroups(windowID: String) async throws -> [TabAssociation]
 ```
 
-**Description**: Retrieve all tab groups for a specific window.
+**Description**: Retrieve all tab associations for a specific window.
 
 **Parameters**:
 - `windowID: String` - Safari window identifier (empty string for current window)
 
-**Returns**: Array of `TabGroup` instances, sorted by `createdAt` ascending
+**Returns**: Array of `TabAssociation` instances, sorted by `createdAt` ascending
 
 **Throws**:
 - `StorageError.permissionDenied` - Storage access denied by user
@@ -103,7 +103,7 @@ func getAllGroups(windowID: String) async throws -> [TabGroup]
 **Example**:
 ```swift
 let groups = try await repository.getAllGroups(windowID: "")
-// groups: [TabGroup(...), TabGroup(...)]
+// groups: [TabAssociation(...), TabAssociation(...)]
 ```
 
 ---
@@ -114,7 +114,7 @@ let groups = try await repository.getAllGroups(windowID: "")
 ```swift
 func observeGroups(
     windowID: String,
-    handler: @escaping ([TabGroup]) -> Void
+    handler: @escaping ([TabAssociation]) -> Void
 ) async throws -> ObservationToken
 ```
 
@@ -122,7 +122,7 @@ func observeGroups(
 
 **Parameters**:
 - `windowID: String` - Window to observe
-- `handler: ([TabGroup]) -> Void` - Closure called when groups change
+- `handler: ([TabAssociation]) -> Void` - Closure called when groups change
 
 **Returns**: `ObservationToken` - Cancel subscription by calling `token.cancel()`
 
@@ -360,7 +360,7 @@ func retrieve<T: Codable>(key: String) async throws -> T?
 
 **Example**:
 ```swift
-let groups: [TabGroup]? = try await adapter.retrieve(key: "groups.main")
+let groups: [TabAssociation]? = try await adapter.retrieve(key: "groups.main")
 ```
 
 ---
@@ -438,7 +438,7 @@ protocol ObservationToken {
 
 ### Keys Used
 
-- `tabOrganizer.groups.{windowID}` → `[TabGroup]`
+- `tabOrganizer.groups.{windowID}` → `[TabAssociation]`
 - `tabOrganizer.settings` → `UserSettings`
 - `tabOrganizer.cleanupHistory` → `[CleanupSuggestion]`
 - `tabOrganizer.schemaVersion` → `Int`

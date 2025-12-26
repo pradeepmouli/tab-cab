@@ -4,8 +4,8 @@ import PackageDescription
 let package = Package(
     name: "TabOrganizer",
     platforms: [
-        .macOS(.v15),
-        .iOS(.v18)
+        .macOS("26.0"),
+        .iOS("26.0")
     ],
     products: [
         .library(name: "TabOrganizerCore", targets: ["TabOrganizerCore"]),
@@ -26,31 +26,30 @@ let package = Package(
             ],
             path: "Sources/TabOrganizerCore"
         ),
-        
+
         // Storage and persistence layer
         .target(
             name: "TabOrganizerStorage",
             dependencies: [
-                "TabOrganizerCore",
-                "TabOrganizerSafariAPI"
+                "TabOrganizerCore"
             ],
             path: "Sources/TabOrganizerStorage"
         ),
-        
+
         // Safari API wrappers and protocols
         .target(
             name: "TabOrganizerSafariAPI",
             dependencies: ["TabOrganizerCore"],
             path: "Sources/TabOrganizerSafariAPI"
         ),
-        
+
         // AI/ML analysis (NaturalLanguage, CoreML)
         .target(
             name: "TabOrganizerAI",
             dependencies: ["TabOrganizerCore"],
             path: "Sources/TabOrganizerAI"
         ),
-        
+
         // SwiftUI views and components
         .target(
             name: "TabOrganizerUI",
@@ -61,7 +60,7 @@ let package = Package(
             ],
             path: "Sources/TabOrganizerUI"
         ),
-        
+
         // Tests
         .testTarget(
             name: "TabOrganizerCoreTests",

@@ -9,6 +9,8 @@
 import Foundation
 import SwiftUI
 import TabOrganizerCore
+import TabOrganizerStorage
+import TabOrganizerSafariAPI
 
 /// Top-level observable state for the Safari Extension UI.
 ///
@@ -19,7 +21,7 @@ import TabOrganizerCore
 /// **Usage**:
 /// ```swift
 /// @State private var state = ExtensionState(
-///     groupService: TabGroupService(...),
+///     associationService: TabAssociationService(...),
 ///     trackingService: TabTrackingService(...)
 /// )
 /// .environment(state)
@@ -30,7 +32,7 @@ public final class ExtensionState {
 
     // MARK: - Dependencies (Services)
 
-    public let groupService: TabGroupService
+    public let associationService: TabAssociationService
     public let trackingService: TabTrackingService
 
     // MARK: - UI State
@@ -38,15 +40,15 @@ public final class ExtensionState {
     /// Current window ID
     public var currentWindowID: String = "window-1" // TODO: Get from Safari API
 
-    /// Currently selected tab group (for editing)
-    public var selectedGroup: TabGroup?
+    /// Currently selected tab association (for editing)
+    public var selectedAssociation: TabAssociation?
 
     /// Sheet presentation state
     public var isPresentingGroupEditor: Bool = false
     public var isPresentingSettings: Bool = false
 
     /// Group being edited (nil = create new, non-nil = edit existing)
-    public var groupBeingEdited: TabGroup?
+    public var associationBeingEdited: TabAssociation?
 
     /// Current tabs (from Safari)
     public var currentTabs: [TabInfo] = []
@@ -78,13 +80,13 @@ public final class ExtensionState {
     /// Creates extension state with injected services.
     ///
     /// - Parameters:
-    ///   - groupService: The tab group service
+    ///   - associationService: The tab association service
     ///   - trackingService: The tab tracking service
     public init(
-        groupService: TabGroupService,
+        associationService: TabAssociationService,
         trackingService: TabTrackingService
     ) {
-        self.groupService = groupService
+        self.associationService = associationService
         self.trackingService = trackingService
     }
 
@@ -97,7 +99,7 @@ public final class ExtensionState {
 
         do {
             // Load groups for current window
-            await groupService.loadGroups(windowID: currentWindowID)
+            await associationService.loadAssociations(windowID: currentWindowID)
 
             // Load tab tracking history
             try await trackingService.loadViewHistory()
@@ -116,16 +118,16 @@ public final class ExtensionState {
     }
 
     /// Shows the group editor for creating a new group.
-    public func showCreateGroup() {
-        groupBeingEdited = nil
+    public func showCreateAssociation() {
+        associationBeingEdited = nil
         isPresentingGroupEditor = true
     }
 
     /// Shows the group editor for editing an existing group.
     ///
     /// - Parameter group: The group to edit
-    public func showEditGroup(_ group: TabGroup) {
-        groupBeingEdited = group
+    public func showEditAssociation(_ group: TabAssociation) {
+        associationBeingEdited = group
         isPresentingGroupEditor = true
     }
 
@@ -137,7 +139,7 @@ public final class ExtensionState {
     /// Dismisses the group editor.
     public func dismissGroupEditor() {
         isPresentingGroupEditor = false
-        groupBeingEdited = nil
+        associationBeingEdited = nil
     }
 
     /// Dismisses the settings view.
@@ -178,19 +180,19 @@ public final class ExtensionState {
     // MARK: - Computed Properties
 
     /// Groups filtered by search text.
-    public var filteredGroups: [TabGroup] {
+    public var filteredAssociations: [TabAssociation] {
         guard !searchText.isEmpty else {
-            return groupService.groups
+            return associationService.associations
         }
 
-        return groupService.groups.filter { group in
+        return associationService.associations.filter { group in
             group.name.localizedCaseInsensitiveContains(searchText)
         }
     }
 
     /// Tabs that are not in any group.
     public var ungroupedTabs: [TabInfo] {
-        let groupedTabIDs = Set(groupService.groups.flatMap { $0.tabIDs })
+        let groupedTabIDs = Set(associationService.associations.flatMap { $0.tabIDs })
         return currentTabs.filter { !groupedTabIDs.contains($0.id) }
     }
 
@@ -230,27 +232,24 @@ extension ExtensionState {
     ///
     /// **TDD Approach**: This provides realistic sample data for SwiftUI Previews,
     /// serving as a "visual test" per Constitution Principle III.
+    @MainActor
     public static var preview: ExtensionState {
-        // Mock repository with sample data
-        let mockRepo = MockGroupRepository.withSampleGroups()
-
-        // Mock storage
-        let mockStorage = MockStorageAdapter()
-
-        // Mock tab manager
-        let mockTabManager = MockTabManager.withSampleTabs()
+        // Use real implementations for previews
+        let repository: any TabAssociationRepository = SafariAssociationRepository()
+        let tabManager: any TabManaging = MockTabManager()
+        let storage: any SafariStorageAdapter = UserDefaultsStorageAdapter(keyPrefix: "preview.")
 
         // Create services
-        let groupService = TabGroupService(
-            repository: mockRepo,
-            tabManager: mockTabManager
+        let associationService = TabAssociationService(
+            repository: repository,
+            tabManager: tabManager
         )
 
-        let trackingService = TabTrackingService(storage: mockStorage)
+        let trackingService = TabTrackingService(storage: storage)
 
         // Create state
         let state = ExtensionState(
-            groupService: groupService,
+            associationService: associationService,
             trackingService: trackingService
         )
 
@@ -261,21 +260,27 @@ extension ExtensionState {
                 url: URL(string: "https://github.com")!,
                 title: "GitHub",
                 windowID: "window-1",
-                index: 0
+                index: 0,
+                isActive: false,
+                isPinned: false
             ),
             TabInfo(
                 id: "tab-2",
                 url: URL(string: "https://stackoverflow.com")!,
                 title: "Stack Overflow",
                 windowID: "window-1",
-                index: 1
+                index: 1,
+                isActive: false,
+                isPinned: false
             ),
             TabInfo(
                 id: "tab-3",
                 url: URL(string: "https://apple.com")!,
                 title: "Apple",
                 windowID: "window-1",
-                index: 2
+                index: 2,
+                isActive: false,
+                isPinned: false
             )
         ]
 

@@ -69,7 +69,7 @@ struct TabTests {
     func testWithGroupRemovesGroupID() {
         let url = URL(string: "https://example.com")!
         let groupID = UUID()
-        let original = Tab(id: "tab-1", url: url, groupID: groupID)
+        let original = Tab(id: "tab-1", url: url, associationID: groupID)
         let updated = original.withGroup(nil)
         
         #expect(original.groupID == groupID)
@@ -179,7 +179,7 @@ struct TabTests {
             url: url,
             title: "Test",
             isPinned: true,
-            groupID: groupID
+            associationID: groupID
         )
         
         let encoded = try JSONEncoder().encode(original)

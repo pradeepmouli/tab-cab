@@ -29,8 +29,8 @@ public struct Tab: Codable, Sendable, Identifiable, Equatable {
     /// Timestamp of last user interaction with this tab
     public let lastViewedAt: Date
 
-    /// Optional reference to parent TabGroup
-    public let groupID: UUID?
+    /// Optional reference to parent TabAssociation
+    public let associationID: UUID?
 
     // MARK: - Initialization
 
@@ -44,7 +44,7 @@ public struct Tab: Codable, Sendable, Identifiable, Equatable {
     ///   - isActive: Whether currently selected (default: false)
     ///   - isPinned: Whether pinned (default: false)
     ///   - lastViewedAt: Last interaction timestamp (default: now)
-    ///   - groupID: Optional parent group ID
+    ///   - associationID: Optional parent group ID
     ///
     /// ## Important
     /// This initializer MUST NOT be called with private browsing tabs.
@@ -57,7 +57,7 @@ public struct Tab: Codable, Sendable, Identifiable, Equatable {
         isActive: Bool = false,
         isPinned: Bool = false,
         lastViewedAt: Date = Date(),
-        groupID: UUID? = nil
+        associationID: UUID? = nil
     ) {
         self.id = id
         self.url = url
@@ -67,7 +67,7 @@ public struct Tab: Codable, Sendable, Identifiable, Equatable {
         self.isActive = isActive
         self.isPinned = isPinned
         self.lastViewedAt = lastViewedAt
-        self.groupID = groupID
+        self.associationID = associationID
     }
 
     // MARK: - Mutations (Value Semantics)
@@ -82,7 +82,7 @@ public struct Tab: Codable, Sendable, Identifiable, Equatable {
             isActive: isActive,
             isPinned: isPinned,
             lastViewedAt: Date(),
-            groupID: groupID
+            associationID: associationID
         )
     }
 
@@ -96,12 +96,12 @@ public struct Tab: Codable, Sendable, Identifiable, Equatable {
             isActive: active,
             isPinned: isPinned,
             lastViewedAt: active ? Date() : lastViewedAt,
-            groupID: groupID
+            associationID: associationID
         )
     }
 
-    /// Returns a new Tab with updated group assignment
-    public func withGroup(_ newGroupID: UUID?) -> Tab {
+    /// Returns a new Tab with updated association assignment
+    public func withAssociation(_ newAssociationID: UUID?) -> Tab {
         Tab(
             id: id,
             url: url,
@@ -110,7 +110,7 @@ public struct Tab: Codable, Sendable, Identifiable, Equatable {
             isActive: isActive,
             isPinned: isPinned,
             lastViewedAt: lastViewedAt,
-            groupID: newGroupID
+            associationID: newAssociationID
         )
     }
 
@@ -124,15 +124,15 @@ public struct Tab: Codable, Sendable, Identifiable, Equatable {
             isActive: isActive,
             isPinned: isPinned,
             lastViewedAt: timestamp,
-            groupID: groupID
+            associationID: associationID
         )
     }
 
     // MARK: - Computed Properties
 
-    /// Whether this tab belongs to a group
+    /// Whether this tab belongs to an association
     public var isGrouped: Bool {
-        groupID != nil
+        associationID != nil
     }
 
     /// Time since last view

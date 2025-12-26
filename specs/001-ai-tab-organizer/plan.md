@@ -5,9 +5,49 @@
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
+---
+
+## Project Status Update (2025-12-25)
+
+### ✅ Phase 0 Complete: Project Renamed to TabCab
+
+**Completed Actions**:
+- Renamed all project files from SwiftTemplateMacOS to TabCab
+- Updated bundle identifier: `com.pmouli.TabCab`
+- Configured TabCabExtension target (Safari App Extension)
+- Wired extension source files with Swift Package dependencies
+- Verified build succeeds: TabCab.app + TabCabExtension.appex
+
+**Project Structure**:
+```
+TabCab/
+├── TabCab.xcworkspace
+├── TabCab.xcodeproj
+├── TabCab.app/              # Main app (thin wrapper)
+├── TabCab/                  # Extension source
+│   ├── SafariExtensionHandler.swift
+│   └── UI/PopoverView.swift
+├── Sources/                 # Swift Package libraries
+│   ├── TabOrganizerCore/
+│   ├── TabOrganizerStorage/
+│   ├── TabOrganizerSafariAPI/
+│   ├── TabOrganizerAI/
+│   └── TabOrganizerUI/
+└── Tests/
+```
+
+**Known Issues**:
+- Extension embedding build phase requires manual verification in Xcode GUI
+- Removed `windowOpened`/`windowClosed` methods (not available in macOS Safari Extension API)
+- Removed preview code from PopoverView (test mocks not available in extension target)
+
+**Next Steps**: Continue with Phase 1-6 user story implementation
+
+---
+
 ## Summary
 
-Create a Safari extension that intelligently organizes browser tabs through manual grouping, AI-suggested grouping, context-aware highlighting, automatic rearrangement, and intelligent cleanup. Core MVP (P1) provides manual tab groups with persistence. Advanced features (P2-P5) leverage on-device ML for context analysis while maintaining strict privacy-first architecture.
+Create a Safari extension that intelligently organizes browser tabs through manual grouping, AI-suggested grouping, context-aware highlighting, automatic rearrangement, and intelligent cleanup. Core MVP (P1) provides manual tab associations with persistence. Advanced features (P2-P5) leverage on-device ML for context analysis while maintaining strict privacy-first architecture.
 
 **Technical Approach**: Swift Package Manager architecture with extension logic in libraries. Native SwiftUI for extension UI. Safari Extension APIs for tab manipulation. On-device NaturalLanguage framework for keyword extraction and CoreML for content classification (no external API calls). Local storage via Safari's secure APIs.
 
@@ -17,7 +57,7 @@ Create a Safari extension that intelligently organizes browser tabs through manu
 **Primary Dependencies**: Safari Extensions framework, SwiftUI, NaturalLanguage framework, CoreML (on-device), Combine (for reactive state)
 **Storage**: Safari local storage APIs (localStorage equivalent), Keychain for sensitive data (if needed for future features)
 **Testing**: Swift Testing framework (@Test, @Suite, #expect, #require)
-**Target Platform**: macOS 15.0+, iOS 18.0+ (Safari extension support)
+**Target Platform**: macOS 26.0+, iOS 26.0+ (enables Liquid Glass effects, enhanced scrolling, modern SwiftUI features)
 **Project Type**: Safari Extension + SPM Libraries (hybrid: extension target + shared packages)
 **Performance Goals**: <5s for AI analysis of 50 tabs, <1s for tab rearrangement, <100ms UI response time
 **Constraints**: <100MB memory for 200 tabs, on-device processing only (no external APIs), HTTPS-only network requests (future features)
@@ -29,10 +69,10 @@ Create a Safari extension that intelligently organizes browser tabs through manu
 
 ### Principle I: Swift-First, Modern APIs Required
 - ✅ **PASS**: Swift 6.1+ with strict concurrency mode
-- ✅ **PASS**: SwiftUI for all UI components
+- ✅ **PASS**: SwiftUI for all UI components (leveraging iOS 26 features: Liquid Glass, enhanced scrolling)
 - ✅ **PASS**: Swift Concurrency (async/await, @MainActor) for all async operations
 - ✅ **PASS**: No GCD or completion handlers
-- ✅ **PASS**: Target macOS 15.0+, iOS 18.0+
+- ✅ **PASS**: Target macOS 26.0+, iOS 26.0+ (cutting-edge UI capabilities)
 - ⚠️ **NEEDS RESEARCH**: Safari Extension APIs - verify availability for tab manipulation, storage, and UI injection
 
 ### Principle II: Privacy-First Data Handling
@@ -114,13 +154,13 @@ Sources/
 │
 ├── TabOrganizerCore/                 # SPM Library: Core domain models and logic
 │   ├── Models/
-│   │   ├── TabGroup.swift            # TabGroup entity
+│   │   ├── TabAssociation.swift            # TabAssociation entity
 │   │   ├── Tab.swift                 # Tab entity
 │   │   ├── ContextAnalysis.swift     # AI analysis results
 │   │   ├── CleanupSuggestion.swift   # Cleanup recommendation
 │   │   └── UserSettings.swift        # User preferences
 │   └── Services/
-│       ├── TabGroupService.swift     # Group CRUD operations
+│       ├── TabAssociationService.swift     # Group CRUD operations
 │       ├── TabTrackingService.swift  # Tab view timestamp tracking
 │       └── SettingsService.swift     # User preferences management
 │
@@ -132,13 +172,13 @@ Sources/
 │
 ├── TabOrganizerStorage/              # SPM Library: Persistence layer
 │   ├── SafariStorageAdapter.swift    # Safari local storage wrapper
-│   ├── TabGroupRepository.swift      # Group persistence
+│   ├── TabAssociationRepository.swift      # Group persistence
 │   ├── TabHistoryRepository.swift    # Tab view history persistence
 │   └── SettingsRepository.swift      # Settings persistence
 │
 ├── TabOrganizerUI/                   # SPM Library: SwiftUI views
 │   ├── Views/
-│   │   ├── GroupListView.swift       # Tab group list
+│   │   ├── GroupListView.swift       # Tab association list
 │   │   ├── GroupEditorView.swift     # Create/edit group
 │   │   ├── TabDragView.swift         # Drag-and-drop tab cards
 │   │   ├── SuggestionsView.swift     # AI suggestions preview
@@ -158,7 +198,7 @@ Sources/
 
 Tests/
 ├── TabOrganizerCoreTests/            # Core domain logic tests
-│   ├── TabGroupServiceTests.swift
+│   ├── TabAssociationServiceTests.swift
 │   ├── TabTrackingServiceTests.swift
 │   └── ModelTests.swift
 │
@@ -209,7 +249,7 @@ Config/
 All research tasks completed. See [research.md](research.md) for detailed findings.
 
 **Key Decisions**:
-1. Custom tab groups (Safari's native groups not accessible via APIs)
+1. Custom tab associations (Safari's native groups not accessible via APIs)
 2. Protocol-oriented architecture for testability
 3. Local storage only (no Keychain needed for MVP)
 4. Private tab exclusion (hard-coded, no user configuration)
@@ -225,7 +265,7 @@ All research tasks completed. See [research.md](research.md) for detailed findin
 
 Generated design artifacts:
 
-1. ✅ **[data-model.md](data-model.md)**: 5 core entities (TabGroup, Tab, ContextAnalysis, CleanupSuggestion, UserSettings)
+1. ✅ **[data-model.md](data-model.md)**: 5 core entities (TabAssociation, Tab, ContextAnalysis, CleanupSuggestion, UserSettings)
 2. ✅ **[contracts/tab-api.md](contracts/tab-api.md)**: Tab manipulation APIs (TabManaging protocol)
 3. ✅ **[contracts/storage-api.md](contracts/storage-api.md)**: Persistence APIs (3 repository protocols)
 4. ✅ **[contracts/ai-api.md](contracts/ai-api.md)**: AI/ML APIs (4 analyzer protocols)

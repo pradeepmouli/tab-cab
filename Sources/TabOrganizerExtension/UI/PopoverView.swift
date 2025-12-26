@@ -21,7 +21,7 @@ import TabOrganizerSafariAPI
 /// 3. Presents GroupListView
 ///
 /// **User Story 1 Integration**: Implements FR-001 to FR-006 by providing
-/// complete UI for manual tab group organization.
+/// complete UI for manual tab association organization.
 @MainActor
 public struct PopoverView: View {
 
@@ -47,10 +47,10 @@ public struct PopoverView: View {
         let actualTabManager = tabManager ?? SafariTabManager()
 
         // Create repository
-        let repository = SafariGroupRepository(storage: actualStorage)
+        let repository = SafariAssociationRepository(storage: actualStorage)
 
         // Create services
-        let groupService = TabGroupService(
+        let associationService = TabAssociationService(
             repository: repository,
             tabManager: actualTabManager
         )
@@ -59,7 +59,7 @@ public struct PopoverView: View {
 
         // Create state
         let state = ExtensionState(
-            groupService: groupService,
+            associationService: associationService,
             trackingService: trackingService
         )
         state.currentWindowID = windowID

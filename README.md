@@ -9,7 +9,7 @@ This is an in-progress Safari extension for macOS that uses AI to help organize 
 ### Current Implementation
 
 ✅ **Core Domain Models** (Phase 2 Complete)
-- TabGroup: Named collection of tabs with validation, colors, and metadata
+- TabAssociation: Named collection of tabs with validation, colors, and metadata
 - Tab: Safari tab representation with domain extraction and inactivity tracking
 - UserSettings: User preferences with feature toggles and validation
 - 35 comprehensive unit tests (all passing)
@@ -17,7 +17,7 @@ This is an in-progress Safari extension for macOS that uses AI to help organize 
 ✅ **Storage Layer** (Phase 3 Complete)
 - StorageAdapter protocol with Sendable constraints for Swift 6
 - UserDefaultsStorageAdapter with JSON encoding and quota management
-- TabGroupRepository for CRUD operations with duplicate checking
+- TabAssociationRepository for CRUD operations with duplicate checking
 - MockStorageAdapter for deterministic testing
 - 14 comprehensive storage tests (all passing)
 
@@ -28,7 +28,7 @@ This is an in-progress Safari extension for macOS that uses AI to help organize 
 - Protocol-oriented design for testability
 
 🔨 **In Progress**
-- Business logic services (TabGroupService implemented)
+- Business logic services (TabAssociationService implemented)
 - Safari Extension app target creation
 - SwiftUI UI components
 
@@ -57,7 +57,7 @@ Tests/                          # Swift Testing framework tests
 ### Development Status
 
 **Total Tests**: 49 passing
-- TabGroup model: 21 tests
+- TabAssociation model: 21 tests
 - Tab model: 14 tests  
 - Storage layer: 14 tests
 
@@ -85,7 +85,7 @@ Tests/                          # Swift Testing framework tests
 
 ### MVP Features (User Story 1)
 
-- ✅ Create named tab groups with colors
+- ✅ Create named tab associations with colors
 - ✅ Persistent storage across sessions
 - 🔨 Collapse/expand groups in UI
 - 🔨 Drag-and-drop tabs between groups
@@ -116,7 +116,7 @@ swift build
 swift test
 
 # Run specific test suite
-swift test --filter TabGroupTests
+swift test --filter TabAssociationTests
 ```
 
 ### Project Structure
@@ -146,4 +146,4 @@ This project follows a **workspace + SPM package** architecture where all busine
 
 ## Contributing
 
-This project is in active development. The MVP focuses on manual tab grouping before implementing AI features.
+This project is in active development. The MVP focuses on manual tab associationing before implementing AI features.

@@ -166,9 +166,9 @@ extension TabCard {
     ///
     /// **FR-004**: Support drag-and-drop to move tabs between groups
     ///
-    /// - Parameter groupID: The current group ID (nil if ungrouped)
+    /// - Parameter associationID: The current group ID (nil if ungrouped)
     /// - Returns: Modified view with drag capability
-    public func draggable(fromGroupID groupID: UUID?) -> some View {
+    public func draggable(fromGroupID associationID: UUID?) -> some View {
         self
             .onDrag {
                 // Create drag item with tab ID
@@ -194,7 +194,9 @@ extension TabCard {
             url: URL(string: "https://github.com")!,
             title: "GitHub - Where the world builds software",
             windowID: "window-1",
-            index: 0
+            index: 0,
+            isActive: false,
+            isPinned: false
         ),
         isSelected: false,
         onTap: { print("Tapped") },
@@ -211,7 +213,9 @@ extension TabCard {
             url: URL(string: "https://stackoverflow.com")!,
             title: "Stack Overflow - Where Developers Learn",
             windowID: "window-1",
-            index: 1
+            index: 1,
+            isActive: true,
+            isPinned: false
         ),
         isSelected: true,
         onTap: { print("Tapped") },
@@ -228,7 +232,9 @@ extension TabCard {
             url: URL(string: "https://developer.apple.com/documentation/swiftui")!,
             title: "SwiftUI | Apple Developer Documentation - Building User Interfaces Across All Apple Platforms",
             windowID: "window-1",
-            index: 2
+            index: 2,
+            isActive: false,
+            isPinned: false
         ),
         isSelected: false,
         onTap: { print("Tapped") },
@@ -246,7 +252,9 @@ extension TabCard {
                 url: URL(string: "https://github.com")!,
                 title: "GitHub",
                 windowID: "window-1",
-                index: 0
+                index: 0,
+                isActive: false,
+                isPinned: false
             ),
             isSelected: false
         )
@@ -257,7 +265,9 @@ extension TabCard {
                 url: URL(string: "https://stackoverflow.com")!,
                 title: "Stack Overflow",
                 windowID: "window-1",
-                index: 1
+                index: 1,
+                isActive: false,
+                isPinned: false
             ),
             isSelected: true
         )
@@ -268,7 +278,9 @@ extension TabCard {
                 url: URL(string: "https://apple.com")!,
                 title: "Apple",
                 windowID: "window-1",
-                index: 2
+                index: 2,
+                isActive: false,
+                isPinned: false
             ),
             isSelected: false
         )

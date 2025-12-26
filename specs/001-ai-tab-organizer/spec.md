@@ -2,8 +2,30 @@
 
 **Feature Branch**: `001-ai-tab-organizer`
 **Created**: 2025-12-24
-**Status**: Draft
-**Input**: User description: "Create an AI-powered safari extension for organization (via tab groups) and cleanup of tabs. Support advanced features such as rearranging/highlighting tabs based on context, e.g. automatically moving/highlighting tabs with similar purpose and content when a tab is selected."
+**Status**: In Development
+**Project Name**: TabCab (formerly SwiftTemplateMacOS)
+**Input**: User description: "Create an AI-powered safari extension for organization (via tab associations) and cleanup of tabs. Support advanced features such as rearranging/highlighting tabs based on context, e.g. automatically moving/highlighting tabs with similar purpose and content when a tab is selected."
+
+---
+
+## Implementation Status (2025-12-25)
+
+### ✅ Phase 0: Project Setup Complete
+- **Project renamed** from SwiftTemplateMacOS to TabCab
+- **Bundle ID**: `com.pmouli.TabCab`
+- **Extension target**: TabCabExtension (Safari App Extension)
+- **Build status**: ✅ Successful (TabCab.app + TabCabExtension.appex)
+- **Architecture**: Swift Package Manager with 5 library targets + extension
+
+### 🚧 Phase 1: Foundation (In Progress)
+- Core models, storage layer, and Safari API wrappers implemented
+- User Story 1 (Manual Tab Grouping) - Most tasks complete
+- See [tasks.md](tasks.md) for detailed progress
+
+### 📋 Upcoming
+- Phase 2-6: User Stories 2-5 (AI features, context highlighting, auto-rearrange, cleanup)
+
+---
 
 ## Clarifications
 
@@ -13,8 +35,8 @@
 - Q: What should happen when analyzing >50 tabs (FR-012 threshold)? → A: Disable AI suggestions, require manual grouping, prompt user to cleanup/consolidate tabs
 - Q: What should happen if auto-rearrangement exceeds the 1-second timeout (FR-021)? → A: Cancel rearrangement, show notification, keep current state
 - Q: How should users specify tab types for auto-closing (e.g., MFA popups)? → A: Predefined categories (Auth, Shopping, Social, etc.) determined by domain pattern matching + AI pattern recognition
-- Q: How should dynamic groups be converted to Safari native tab groups? → A: "Convert to Native" button in group header + emoji prefix on first tab, triggered by double-click
-- Q: How should duplicate native tab groups be handled during conversion? → A: Merge into existing native group if name/content is similar
+- Q: How should dynamic groups be converted to Safari native tab associations? → A: "Convert to Native" button in group header + emoji prefix on first tab, triggered by double-click
+- Q: How should duplicate native tab associations be handled during conversion? → A: Merge into existing native group if name/content is similar
 - Q: How should new tabs be assigned to groups automatically? → A: Auto-assign based on domain + AI analysis (on-demand)
 - Q: When should ML/AI be used vs cached domain mappings? → A: ML only for unknown domains; use cached domain→category mappings for known sites
 
@@ -31,8 +53,8 @@ Users can manually organize open tabs into named groups (e.g., "Work", "Research
 **Acceptance Scenarios**:
 
 1. **Given** I have 15 tabs open across different topics, **When** I open the extension and create a group named "Work" and drag 5 tabs into it, **Then** those tabs are visually grouped together and the group is labeled "Work"
-2. **Given** I have created tab groups in my current session, **When** I close and reopen Safari, **Then** all tab groups and their contained tabs are restored in the same state
-3. **Given** I have a tab group with 8 tabs, **When** I click the collapse button on the group, **Then** the tabs are hidden from view but remain accessible by expanding the group
+2. **Given** I have created tab associations in my current session, **When** I close and reopen Safari, **Then** all tab associations and their contained tabs are restored in the same state
+3. **Given** I have a tab association with 8 tabs, **When** I click the collapse button on the group, **Then** the tabs are hidden from view but remain accessible by expanding the group
 4. **Given** I want to remove tabs from a group, **When** I drag a tab out of the group, **Then** the tab becomes ungrouped and remains open in the main tab bar
 
 ---
@@ -125,16 +147,16 @@ Users can configure automatic closure of specific tab categories (Auth/MFA, Shop
 
 ### User Story 7 - Native Tab Group Conversion (Priority: P7)
 
-Users can convert extension-managed dynamic tab groups into Safari's native tab groups for permanent organization. Native groups display with emoji prefixes and persist independently of the extension.
+Users can convert extension-managed dynamic tab associations into Safari's native tab associations for permanent organization. Native groups display with emoji prefixes and persist independently of the extension.
 
 **Why this priority**: Provides exit strategy and interoperability with Safari's native features. Users who find a stable grouping can "freeze" it into a native group. Lower priority as it's a convenience feature for power users.
 
-**Independent Test**: Can be tested by creating a dynamic group "Work" with 5 tabs, double-clicking the group header to trigger conversion, and verifying Safari creates a native tab group with emoji prefix (e.g., 🔗 Work) and tabs are moved to native group.
+**Independent Test**: Can be tested by creating a dynamic group "Work" with 5 tabs, double-clicking the group header to trigger conversion, and verifying Safari creates a native tab association with emoji prefix (e.g., 🔗 Work) and tabs are moved to native group.
 
 **Acceptance Scenarios**:
 
-1. **Given** I have a dynamic group "Research" with 8 tabs, **When** I double-click the group header, **Then** Safari creates a native tab group named "🔗 Research" and all 8 tabs are moved into it
-2. **Given** I have a dynamic group "Work" and an existing native tab group "Work" with similar content, **When** I convert the dynamic group to native, **Then** the system merges tabs into the existing "Work" group rather than creating a duplicate
+1. **Given** I have a dynamic group "Research" with 8 tabs, **When** I double-click the group header, **Then** Safari creates a native tab association named "🔗 Research" and all 8 tabs are moved into it
+2. **Given** I have a dynamic group "Work" and an existing native tab association "Work" with similar content, **When** I convert the dynamic group to native, **Then** the system merges tabs into the existing "Work" group rather than creating a duplicate
 3. **Given** I have converted a group to native, **When** I view my tab bar, **Then** the first tab in the native group shows an emoji prefix (e.g., 🔗) indicating it was created by the extension
 4. **Given** I have a native group created by the extension, **When** I close and reopen Safari, **Then** the native group persists independently (extension not required)
 5. **Given** I want to manage native groups, **When** I add/remove tabs from a native group in Safari, **Then** the extension no longer manages that group (it's fully native)
@@ -171,9 +193,9 @@ When a new tab opens, the extension automatically assigns it to the most relevan
 - How does the extension handle tabs with restricted content (e.g., `about:blank`, browser settings pages)?
 - What happens when Safari crashes mid-rearrangement? (State recovery)
 - How does the system handle tabs in private browsing mode differently?
-- What happens when multiple tab groups have identical names?
+- What happens when multiple tab associations have identical names?
 - How does cleanup handle tabs with unsaved form data?
-- What happens if a user tries to convert a group to native but Safari's native tab group API fails?
+- What happens if a user tries to convert a group to native but Safari's native tab association API fails?
 - How does the system handle category detection when a tab matches multiple categories with conflicting rules?
 - What happens if workflow completion detection fails (e.g., auth popup doesn't close automatically)?
 - How does the extension handle tabs that are part of native groups created outside the extension?
@@ -185,8 +207,8 @@ When a new tab opens, the extension automatically assigns it to the most relevan
 
 #### Tab Grouping
 
-- **FR-001**: System MUST allow users to create named tab groups with custom colors
-- **FR-002**: System MUST persist tab groups and their membership across browser sessions
+- **FR-001**: System MUST allow users to create named tab associations with custom colors
+- **FR-002**: System MUST persist tab associations and their membership across browser sessions
 - **FR-003**: System MUST allow users to collapse/expand groups to show/hide contained tabs
 - **FR-004**: System MUST support drag-and-drop to move tabs between groups or remove tabs from groups
 - **FR-005**: System MUST allow users to rename or delete groups at any time
@@ -241,7 +263,7 @@ When a new tab opens, the extension automatically assigns it to the most relevan
 #### Native Tab Group Integration
 
 - **FR-047**: System MUST provide "Convert to Native" functionality triggered by double-clicking group header
-- **FR-048**: System MUST create Safari native tab groups with emoji prefix (🔗) when converting dynamic groups
+- **FR-048**: System MUST create Safari native tab associations with emoji prefix (🔗) when converting dynamic groups
 - **FR-049**: System MUST preserve group name and all tab memberships during native conversion
 - **FR-050**: System MUST remove extension management from groups after native conversion (fully native thereafter)
 - **FR-051**: System MUST provide "Convert All to Native" bulk operation for all dynamic groups
@@ -275,7 +297,7 @@ When a new tab opens, the extension automatically assigns it to the most relevan
 
 ### Key Entities
 
-- **TabGroup**: Represents a named collection of tabs with properties (name, color, collapsed state, creation timestamp, isNative flag). Contains references to Tab IDs. Persists across sessions.
+- **TabAssociation**: Represents a named collection of tabs with properties (name, color, collapsed state, creation timestamp, isNative flag). Contains references to Tab IDs. Persists across sessions.
 - **Tab**: Represents a Safari tab with properties (URL, title, domain, last viewed timestamp, pinned status, group membership, category). Tracked for context analysis and cleanup decisions.
 - **ContextAnalysis**: Represents the AI's understanding of tab relationships with properties (similarity score, matching criteria, keywords, category). Generated on-demand for highlighting/grouping.
 - **CleanupSuggestion**: Represents a recommendation to close tabs with properties (suggested tab IDs, inactivity duration, user decision history, closure reason - time-based or category-based). Used for cleanup workflow.
@@ -291,7 +313,7 @@ When a new tab opens, the extension automatically assigns it to the most relevan
 - **SC-003**: Context highlighting identifies relevant tabs with 85%+ accuracy (user satisfaction survey: "Did highlights match your expectations?")
 - **SC-004**: Average tab count per user decreases by 30% within first week of using cleanup features
 - **SC-005**: System processes AI analysis for 50 tabs in under 5 seconds on standard hardware (2019+ MacBook)
-- **SC-006**: 90%+ of users successfully create their first tab group without consulting documentation
+- **SC-006**: 90%+ of users successfully create their first tab association without consulting documentation
 - **SC-007**: Auto-rearrangement completes within 1 second for 100+ tab scenarios
 - **SC-008**: Extension uses less than 100MB memory for managing 200 tabs
 - **SC-009**: Zero data privacy incidents or unauthorized external transmissions (verified by audit)
@@ -316,10 +338,10 @@ When a new tab opens, the extension automatically assigns it to the most relevan
 ## Out of Scope
 
 - Cross-browser support (Chrome, Firefox) - Safari-only per project scope
-- Cloud sync of tab groups across devices - privacy concerns, future enhancement
+- Cloud sync of tab associations across devices - privacy concerns, future enhancement
 - Mobile Safari integration (iOS/iPadOS) - Phase 2 consideration
 - Tab session history/timeline view - separate feature
 - Integration with third-party services (Notion, Evernote for saving tabs) - future plugin system
 - Tab preview thumbnails - performance/memory concerns
 - Voice commands for tab organization - future enhancement
-- Sharing tab groups with other users - privacy/security complexity
+- Sharing tab associations with other users - privacy/security complexity

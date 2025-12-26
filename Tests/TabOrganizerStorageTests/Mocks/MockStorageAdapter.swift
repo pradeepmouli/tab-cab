@@ -1,5 +1,6 @@
 import Foundation
 @testable import TabOrganizerStorage
+@testable import TabOrganizerCore
 
 /// Mock implementation of SafariStorageAdapter for testing
 ///
@@ -123,5 +124,40 @@ public actor MockStorageAdapter: SafariStorageAdapter {
     /// Directly sets a value (bypassing encoding for test setup)
     public func setRawData(_ data: Data, forKey key: String) {
         storage[key] = data
+    }
+
+    /// Configures the mock to simulate quota exceeded errors
+    public func setQuotaExceeded(_ value: Bool) {
+        shouldSimulateQuotaExceeded = value
+    }
+
+    /// Configures the maximum storage size
+    public func setMaxStorageSize(_ size: Int) {
+        maxStorageSize = size
+    }
+
+    /// Returns the list of saved keys for verification
+    public func getSavedKeys() -> [String] {
+        savedKeys
+    }
+
+    /// Returns the list of removed keys for verification
+    public func getRemovedKeys() -> [String] {
+        removedKeys
+    }
+
+    /// Checks if quota exceeded simulation is enabled
+    public func isQuotaExceededEnabled() -> Bool {
+        shouldSimulateQuotaExceeded
+    }
+
+    /// Configures the mock to simulate encoding failures
+    public func setEncodingFailure(_ value: Bool) {
+        shouldSimulateEncodingFailure = value
+    }
+
+    /// Configures the mock to simulate decoding failures
+    public func setDecodingFailure(_ value: Bool) {
+        shouldSimulateDecodingFailure = value
     }
 }

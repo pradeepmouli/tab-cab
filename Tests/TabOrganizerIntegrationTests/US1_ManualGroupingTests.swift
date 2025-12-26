@@ -24,16 +24,16 @@ struct US1_ManualGroupingTests {
 
     // MARK: - Test Fixtures
 
-    func makeFullStack() -> (state: ExtensionState, storage: MockStorageAdapter, repo: MockGroupRepository) {
+    func makeFullStack() -> (state: ExtensionState, storage: MockStorageAdapter, repo: MockAssociationRepository) {
         let storage = MockStorageAdapter()
-        let repo = MockGroupRepository()
+        let repo = MockAssociationRepository()
         let tabManager = MockTabManager.withSampleTabs()
 
-        let groupService = TabGroupService(repository: repo, tabManager: tabManager)
+        let associationService = TabAssociationService(repository: repo, tabManager: tabManager)
         let trackingService = TabTrackingService(storage: storage)
 
         let state = ExtensionState(
-            groupService: groupService,
+            associationService: associationService,
             trackingService: trackingService
         )
 
@@ -48,21 +48,21 @@ struct US1_ManualGroupingTests {
         let windowID = state.currentWindowID
 
         // STEP 1: Create multiple groups (simulating user actions)
-        let workGroup = try await state.groupService.createGroup(
+        let workGroup = try await state.associationService.createGroup(
             name: "Work",
             color: "#0066CC",
             tabIDs: ["tab-1", "tab-2", "tab-3"],
             windowID: windowID
         )
 
-        let researchGroup = try await state.groupService.createGroup(
+        let researchGroup = try await state.associationService.createGroup(
             name: "Research",
             color: "#00CC66",
             tabIDs: ["tab-4", "tab-5"],
             windowID: windowID
         )
 
-        let shoppingGroup = try await state.groupService.createGroup(
+        let shoppingGroup = try await state.associationService.createGroup(
             name: "Shopping",
             color: "#FF6600",
             tabIDs: ["tab-6"],
@@ -71,22 +71,22 @@ struct US1_ManualGroupingTests {
 
         // STEP 2: Verify groups are created
         await state.loadInitialState()
-        #expect(state.groupService.groups.count == 3)
+        #expect(state.associationService.groups.count == 3)
 
         // STEP 3: Simulate Safari close → reopen by creating new state with same storage
         let (newState, _, _) = makeFullStack()
         // Copy groups from repo to simulate persistence
-        newState.groupService.groupService.groups = repo.groups[windowID] ?? []
+        newState.associationService.associationService.groups = repo.groups[windowID] ?? []
 
         // STEP 4: Load persisted data
         await newState.loadInitialState()
 
         // STEP 5: Verify all groups restored
-        #expect(newState.groupService.groups.count == 3)
+        #expect(newState.associationService.groups.count == 3)
 
-        let restoredWork = newState.groupService.groups.first { $0.name == "Work" }
-        let restoredResearch = newState.groupService.groups.first { $0.name == "Research" }
-        let restoredShopping = newState.groupService.groups.first { $0.name == "Shopping" }
+        let restoredWork = newState.associationService.groups.first { $0.name == "Work" }
+        let restoredResearch = newState.associationService.groups.first { $0.name == "Research" }
+        let restoredShopping = newState.associationService.groups.first { $0.name == "Shopping" }
 
         #expect(restoredWork?.tabIDs.count == 3)
         #expect(restoredResearch?.tabIDs.count == 2)
@@ -109,7 +109,7 @@ struct US1_ManualGroupingTests {
         }
 
         // When: I open the extension and create a group named "Work" and drag 5 tabs into it
-        let group = try await state.groupService.createGroup(
+        let group = try await state.associationService.createGroup(
             name: "Work",
             color: "#0066CC",
             windowID: state.currentWindowID
@@ -117,9 +117,9 @@ struct US1_ManualGroupingTests {
 
         // Add tabs one by one (simulating drag-and-drop)
         for tabID in ["tab-1", "tab-2", "tab-3", "tab-4", "tab-5"] {
-            try await state.groupService.addTabToGroup(
+            try await state.associationService.addTabToGroup(
                 tabID: tabID,
-                groupID: group.id,
+                associationID: group.id,
                 windowID: state.currentWindowID
             )
         }
@@ -127,7 +127,7 @@ struct US1_ManualGroupingTests {
         await state.loadInitialState()
 
         // Then: Those tabs are visually grouped together and the group is labeled "Work"
-        let workGroup = state.groupService.groups.first { $0.name == "Work" }
+        let workGroup = state.associationService.groups.first { $0.name == "Work" }
         #expect(workGroup != nil)
         #expect(workGroup?.tabIDs.count == 5)
         #expect(workGroup?.color == "#0066CC")
@@ -137,15 +137,15 @@ struct US1_ManualGroupingTests {
     func acceptanceScenario2PersistenceAcrossSessions() async throws {
         let (state1, _, repo) = makeFullStack()
 
-        // Given: I have created tab groups in my current session
-        _ = try await state1.groupService.createGroup(
+        // Given: I have created tab associations in my current session
+        _ = try await state1.associationService.createGroup(
             name: "Work",
             color: "#0066CC",
             tabIDs: ["tab-1", "tab-2"],
             windowID: state1.currentWindowID
         )
 
-        _ = try await state1.groupService.createGroup(
+        _ = try await state1.associationService.createGroup(
             name: "Research",
             color: "#00CC66",
             tabIDs: ["tab-3"],
@@ -154,14 +154,14 @@ struct US1_ManualGroupingTests {
 
         // When: I close and reopen Safari (simulated by new state)
         let (state2, _, _) = makeFullStack()
-        state2.groupService.groupService.groups = repo.groups[state1.currentWindowID] ?? []
+        state2.associationService.associationService.groups = repo.groups[state1.currentWindowID] ?? []
         await state2.loadInitialState()
 
-        // Then: All tab groups and their contained tabs are restored in the same state
-        #expect(state2.groupService.groups.count == 2)
+        // Then: All tab associations and their contained tabs are restored in the same state
+        #expect(state2.associationService.groups.count == 2)
 
-        let work = state2.groupService.groups.first { $0.name == "Work" }
-        let research = state2.groupService.groups.first { $0.name == "Research" }
+        let work = state2.associationService.groups.first { $0.name == "Work" }
+        let research = state2.associationService.groups.first { $0.name == "Research" }
 
         #expect(work?.tabIDs == ["tab-1", "tab-2"])
         #expect(research?.tabIDs == ["tab-3"])
@@ -171,8 +171,8 @@ struct US1_ManualGroupingTests {
     func acceptanceScenario3CollapseGroups() async throws {
         let (state, _, _) = makeFullStack()
 
-        // Given: I have a tab group with 8 tabs
-        let group = try await state.groupService.createGroup(
+        // Given: I have a tab association with 8 tabs
+        let group = try await state.associationService.createGroup(
             name: "Work",
             color: "#0066CC",
             tabIDs: Array(1...8).map { "tab-\($0)" },
@@ -182,27 +182,27 @@ struct US1_ManualGroupingTests {
         #expect(group.collapsed == false)
 
         // When: I click the collapse button on the group
-        try await state.groupService.toggleGroupCollapsed(
-            groupID: group.id,
+        try await state.associationService.toggleGroupCollapsed(
+            associationID: group.id,
             windowID: state.currentWindowID
         )
 
         await state.loadInitialState()
 
         // Then: The tabs are hidden from view but remain accessible by expanding the group
-        let collapsedGroup = state.groupService.groups.first { $0.id == group.id }
+        let collapsedGroup = state.associationService.groups.first { $0.id == group.id }
         #expect(collapsedGroup?.collapsed == true)
         #expect(collapsedGroup?.tabIDs.count == 8) // Tabs still present
 
         // And: Can expand again
-        try await state.groupService.toggleGroupCollapsed(
-            groupID: group.id,
+        try await state.associationService.toggleGroupCollapsed(
+            associationID: group.id,
             windowID: state.currentWindowID
         )
 
         await state.loadInitialState()
 
-        let expandedGroup = state.groupService.groups.first { $0.id == group.id }
+        let expandedGroup = state.associationService.groups.first { $0.id == group.id }
         #expect(expandedGroup?.collapsed == false)
     }
 
@@ -211,7 +211,7 @@ struct US1_ManualGroupingTests {
         let (state, _, _) = makeFullStack()
 
         // Given: I want to remove tabs from a group
-        let group = try await state.groupService.createGroup(
+        let group = try await state.associationService.createGroup(
             name: "Work",
             color: "#0066CC",
             tabIDs: ["tab-1", "tab-2", "tab-3"],
@@ -219,16 +219,16 @@ struct US1_ManualGroupingTests {
         )
 
         // When: I drag a tab out of the group
-        try await state.groupService.removeTabFromGroup(
+        try await state.associationService.removeTabFromGroup(
             tabID: "tab-2",
-            groupID: group.id,
+            associationID: group.id,
             windowID: state.currentWindowID
         )
 
         await state.loadInitialState()
 
         // Then: The tab becomes ungrouped and remains open in the main tab bar
-        let updatedGroup = state.groupService.groups.first { $0.id == group.id }
+        let updatedGroup = state.associationService.groups.first { $0.id == group.id }
         #expect(updatedGroup?.tabIDs.count == 2)
         #expect(!updatedGroup!.tabIDs.contains("tab-2"))
 
@@ -250,11 +250,11 @@ struct US1_ManualGroupingTests {
         let (state, storage, repo) = makeFullStack()
 
         // UI Layer: User creates group via state
-        state.showCreateGroup()
+        state.showCreateAssociation()
         #expect(state.isPresentingGroupEditor)
 
         // Service Layer: Create group
-        let group = try await state.groupService.createGroup(
+        let group = try await state.associationService.createGroup(
             name: "Work",
             color: "#0066CC",
             tabIDs: ["tab-1"],
@@ -270,8 +270,8 @@ struct US1_ManualGroupingTests {
 
         // Reload and verify
         await state.loadInitialState()
-        #expect(state.groupService.groups.count == 1)
-        #expect(state.groupService.groups.first?.id == group.id)
+        #expect(state.associationService.groups.count == 1)
+        #expect(state.associationService.groups.first?.id == group.id)
     }
 
     @Test("Error propagation through layers")
@@ -283,7 +283,7 @@ struct US1_ManualGroupingTests {
 
         // Attempt create at service layer
         do {
-            _ = try await state.groupService.createGroup(
+            _ = try await state.associationService.createGroup(
                 name: "Work",
                 color: "#0066CC",
                 windowID: state.currentWindowID

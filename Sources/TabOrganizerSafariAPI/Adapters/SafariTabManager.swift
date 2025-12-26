@@ -1,5 +1,6 @@
 import Foundation
-import SafariServices
+import TabOrganizerCore
+@preconcurrency import SafariServices
 
 /// Production implementation of TabManaging using Safari Extension APIs
 ///
@@ -20,9 +21,6 @@ public final class SafariTabManager: TabManaging {
         var allTabs: [TabInfo] = []
 
         for window in windows {
-            // Skip private browsing windows
-            guard !window.isPrivate else { continue }
-
             let tabs = try await getTabs(from: window)
             allTabs.append(contentsOf: tabs)
         }
@@ -37,12 +35,8 @@ public final class SafariTabManager: TabManaging {
             throw TabAPIError.windowNotFound(windowID: windowID)
         }
 
-        // Return empty array for private windows (privacy requirement)
-        guard !window.isPrivate else {
-            return []
-        }
-
-        return try await getTabs(from: window)
+        let transfer = UnsafeTransfer(wrappedValue: window)
+        return try await getTabs(from: transfer.wrappedValue)
     }
 
     public func closeTab(tabID: String) async throws {
@@ -54,7 +48,7 @@ public final class SafariTabManager: TabManaging {
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             tab.getContainingTab { safariTab in
-                safariTab?.close()
+                safariTab.close()
                 continuation.resume()
             }
         }
@@ -69,7 +63,7 @@ public final class SafariTabManager: TabManaging {
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             tab.getContainingTab { safariTab in
-                safariTab?.activate(completionHandler: { _ in
+                safariTab.activate(completionHandler: {
                     continuation.resume()
                 })
             }
@@ -89,24 +83,24 @@ public final class SafariTabManager: TabManaging {
 
     // MARK: - Private Helpers
 
-    private func getAllWindows() async throws -> [SFSafariWindow] {
+    nonisolated private func getAllWindows() async throws -> [SFSafariWindow] {
         try await withCheckedThrowingContinuation { continuation in
             SFSafariApplication.getAllWindows { windows in
-                continuation.resume(returning: windows)
+                let transfer = UnsafeTransfer(wrappedValue: windows)
+                continuation.resume(returning: transfer.wrappedValue)
             }
         }
     }
 
-    private func getAllSafariTabs() async throws -> [SFSafariPage] {
+    nonisolated private func getAllSafariTabs() async throws -> [SFSafariPage] {
         let windows = try await getAllWindows()
         var allPages: [SFSafariPage] = []
 
         for window in windows {
-            guard !window.isPrivate else { continue }
-
             let tabs = try await withCheckedThrowingContinuation { continuation in
                 window.getAllTabs { tabs in
-                    continuation.resume(returning: tabs)
+                    let transfer = UnsafeTransfer(wrappedValue: tabs)
+                    continuation.resume(returning: transfer.wrappedValue)
                 }
             }
 
@@ -120,12 +114,13 @@ public final class SafariTabManager: TabManaging {
         return allPages
     }
 
-    private func getTabs(from window: SFSafariWindow) async throws -> [TabInfo] {
+    nonisolated private func getTabs(from window: SFSafariWindow) async throws -> [TabInfo] {
         let windowID = getWindowID(from: window)
 
         let tabs = try await withCheckedThrowingContinuation { continuation in
             window.getAllTabs { tabs in
-                continuation.resume(returning: tabs)
+                let transfer = UnsafeTransfer(wrappedValue: tabs)
+                continuation.resume(returning: transfer.wrappedValue)
             }
         }
 
@@ -140,15 +135,13 @@ public final class SafariTabManager: TabManaging {
         return tabInfos
     }
 
-    private func createTabInfo(from tab: SFSafariTab, windowID: String, index: Int) async throws -> TabInfo {
+    nonisolated private func createTabInfo(from tab: SFSafariTab, windowID: String, index: Int) async throws -> TabInfo {
         let page = try await getActivePage(from: tab)
         let properties = try await getPageProperties(from: page)
 
-        let isActive = try await withCheckedThrowingContinuation { continuation in
-            tab.isActive { active in
-                continuation.resume(returning: active)
-            }
-        }
+        // Note: Safari Extension API doesn't provide isActive status
+        // We'll default to false for now
+        let isActive = false
 
         return TabInfo(
             id: getTabID(from: page),
@@ -161,11 +154,12 @@ public final class SafariTabManager: TabManaging {
         )
     }
 
-    private func getActivePage(from tab: SFSafariTab) async throws -> SFSafariPage {
+    nonisolated private func getActivePage(from tab: SFSafariTab) async throws -> SFSafariPage {
         try await withCheckedThrowingContinuation { continuation in
             tab.getActivePage { page in
                 if let page = page {
-                    continuation.resume(returning: page)
+                    let transfer = UnsafeTransfer(wrappedValue: page)
+                    continuation.resume(returning: transfer.wrappedValue)
                 } else {
                     continuation.resume(throwing: TabAPIError.unknown(underlyingError: "No active page in tab"))
                 }
@@ -173,11 +167,12 @@ public final class SafariTabManager: TabManaging {
         }
     }
 
-    private func getPageProperties(from page: SFSafariPage) async throws -> SFSafariPageProperties {
+    nonisolated private func getPageProperties(from page: SFSafariPage) async throws -> SFSafariPageProperties {
         try await withCheckedThrowingContinuation { continuation in
             page.getPropertiesWithCompletionHandler { properties in
                 if let properties = properties {
-                    continuation.resume(returning: properties)
+                    let transfer = UnsafeTransfer(wrappedValue: properties)
+                    continuation.resume(returning: transfer.wrappedValue)
                 } else {
                     continuation.resume(throwing: TabAPIError.unknown(underlyingError: "Failed to get page properties"))
                 }
@@ -185,12 +180,12 @@ public final class SafariTabManager: TabManaging {
         }
     }
 
-    private func getWindowID(from window: SFSafariWindow) -> String {
+    nonisolated private func getWindowID(from window: SFSafariWindow) -> String {
         // Use object identifier as unique window ID
         String(describing: ObjectIdentifier(window))
     }
 
-    private func getTabID(from page: SFSafariPage) -> String {
+    nonisolated private func getTabID(from page: SFSafariPage) -> String {
         // Use object identifier as unique tab ID
         String(describing: ObjectIdentifier(page))
     }

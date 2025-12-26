@@ -7,8 +7,8 @@
 // ==========================================
 // Test Target Settings (Customizable by scaffold tool)
 // ==========================================
-PRODUCT_BUNDLE_IDENTIFIER = com.pmouli.SwiftTemplateMacOS
-TEST_TARGET_NAME = SwiftTemplateMacOS
+PRODUCT_BUNDLE_IDENTIFIER = com.pmouli.TabCab
+TEST_TARGET_NAME = TabCab
 
 // Fix duplicate module name issue
 PRODUCT_MODULE_NAME = $(PRODUCT_NAME)UITests

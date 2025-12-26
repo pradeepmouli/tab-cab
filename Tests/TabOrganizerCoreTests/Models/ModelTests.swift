@@ -5,98 +5,98 @@ import Foundation
 @Suite("Model Tests")
 struct ModelTests {
 
-    // MARK: - TabGroup Tests
+    // MARK: - TabAssociation Tests
 
-    @Test("TabGroup validates name is not empty")
+    @Test("TabAssociation validates name is not empty")
     func tabGroupRejectsEmptyName() throws {
-        #expect(throws: TabGroup.ValidationError.nameEmpty) {
-            try TabGroup(name: "")
+        #expect(throws: TabAssociation.ValidationError.nameEmpty) {
+            try TabAssociation(name: "")
         }
     }
 
-    @Test("TabGroup validates name length")
+    @Test("TabAssociation validates name length")
     func tabGroupRejectsLongName() throws {
         let longName = String(repeating: "a", count: 51)
-        #expect(throws: TabGroup.ValidationError.nameTooLong) {
-            try TabGroup(name: longName)
+        #expect(throws: TabAssociation.ValidationError.nameTooLong) {
+            try TabAssociation(name: longName)
         }
     }
 
-    @Test("TabGroup accepts valid name")
+    @Test("TabAssociation accepts valid name")
     func tabGroupAcceptsValidName() throws {
-        let group = try TabGroup(name: "Work")
+        let group = try TabAssociation(name: "Work")
         #expect(group.name == "Work")
     }
 
-    @Test("TabGroup validates hex color format")
+    @Test("TabAssociation validates hex color format")
     func tabGroupValidatesHexColor() throws {
-        #expect(throws: TabGroup.ValidationError.invalidColorFormat) {
-            try TabGroup(name: "Test", color: "invalid")
+        #expect(throws: TabAssociation.ValidationError.invalidColorFormat) {
+            try TabAssociation(name: "Test", color: "invalid")
         }
 
-        #expect(throws: TabGroup.ValidationError.invalidColorFormat) {
-            try TabGroup(name: "Test", color: "#GGGGGG")
+        #expect(throws: TabAssociation.ValidationError.invalidColorFormat) {
+            try TabAssociation(name: "Test", color: "#GGGGGG")
         }
 
         // Valid hex color should work
-        let group = try TabGroup(name: "Test", color: "#007AFF")
+        let group = try TabAssociation(name: "Test", color: "#007AFF")
         #expect(group.color == "#007AFF")
     }
 
-    @Test("TabGroup accepts predefined color names")
+    @Test("TabAssociation accepts predefined color names")
     func tabGroupAcceptsPredefinedColors() throws {
-        let group = try TabGroup(name: "Test", color: "blue")
+        let group = try TabAssociation(name: "Test", color: "blue")
         #expect(group.color == "blue")
     }
 
-    @Test("TabGroup allows empty tab list")
+    @Test("TabAssociation allows empty tab list")
     func tabGroupAllowsEmptyTabs() throws {
-        let group = try TabGroup(name: "Empty Group")
+        let group = try TabAssociation(name: "Empty Group")
         #expect(group.isEmpty)
         #expect(group.tabCount == 0)
     }
 
-    @Test("TabGroup withTabAdded adds tab")
+    @Test("TabAssociation withTabAdded adds tab")
     func tabGroupAddsTab() throws {
-        let group = try TabGroup(name: "Test")
+        let group = try TabAssociation(name: "Test")
         let updated = try group.withTabAdded("tab-1")
 
         #expect(updated.tabIDs.contains("tab-1"))
         #expect(updated.tabCount == 1)
     }
 
-    @Test("TabGroup withTabAdded prevents duplicates")
+    @Test("TabAssociation withTabAdded prevents duplicates")
     func tabGroupPreventsDuplicateTabs() throws {
-        let group = try TabGroup(name: "Test", tabIDs: ["tab-1"])
+        let group = try TabAssociation(name: "Test", tabIDs: ["tab-1"])
         let updated = try group.withTabAdded("tab-1")
 
         #expect(updated.tabCount == 1)
         #expect(updated.tabIDs == group.tabIDs)
     }
 
-    @Test("TabGroup withTabRemoved removes tab")
+    @Test("TabAssociation withTabRemoved removes tab")
     func tabGroupRemovesTab() throws {
-        let group = try TabGroup(name: "Test", tabIDs: ["tab-1", "tab-2"])
+        let group = try TabAssociation(name: "Test", tabIDs: ["tab-1", "tab-2"])
         let updated = try group.withTabRemoved("tab-1")
 
         #expect(!updated.tabIDs.contains("tab-1"))
         #expect(updated.tabCount == 1)
     }
 
-    @Test("TabGroup withCollapsedToggled toggles state")
+    @Test("TabAssociation withCollapsedToggled toggles state")
     func tabGroupTogglesCollapsed() throws {
-        let group = try TabGroup(name: "Test", collapsed: false)
+        let group = try TabAssociation(name: "Test", collapsed: false)
         let toggled = try group.withCollapsedToggled()
 
         #expect(toggled.collapsed == true)
     }
 
-    @Test("TabGroup tracks AI suggested metadata")
+    @Test("TabAssociation tracks AI suggested metadata")
     func tabGroupTracksAISuggested() throws {
-        let group = try TabGroup(name: "AI Group", metadata: ["aiSuggested": "true"])
+        let group = try TabAssociation(name: "AI Group", metadata: ["aiSuggested": "true"])
         #expect(group.isAISuggested)
 
-        let manual = try TabGroup(name: "Manual Group")
+        let manual = try TabAssociation(name: "Manual Group")
         #expect(!manual.isAISuggested)
     }
 

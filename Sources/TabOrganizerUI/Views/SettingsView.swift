@@ -36,12 +36,13 @@ public struct SettingsView: View {
     public init() {
         // Load settings from service or use defaults
         // TODO: Load from SettingsService in Phase 4+
-        _settings = State(initialValue: UserSettings(
+        _settings = State(initialValue: try! UserSettings(
             contextHighlightingEnabled: true,
             autoRearrangementEnabled: false,
-            cleanupEnabled: true,
+            cleanupSuggestionsEnabled: true,
             inactivityThreshold: 1800, // 30 minutes
-            autoCloseUngroups: false
+            autoCloseEnabled: false,
+            autoCloseUngroupedOnly: true
         ))
     }
 
@@ -52,22 +53,37 @@ public struct SettingsView: View {
             Form {
                 // Feature Toggles (FR-035)
                 Section {
-                    Toggle("Context Highlighting", isOn: $settings.contextHighlightingEnabled)
-                        .accessibilityLabel("Enable context highlighting")
+                    Toggle("Context Highlighting", isOn: Binding(
+                        get: { settings.contextHighlightingEnabled },
+                        set: { newValue in
+                            settings = (try? settings.withContextHighlighting(newValue)) ?? settings
+                        }
+                    ))
+                    .accessibilityLabel("Enable context highlighting")
 
                     Text("Highlight related tabs when you select a tab")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Toggle("Auto-Rearrangement", isOn: $settings.autoRearrangementEnabled)
-                        .accessibilityLabel("Enable auto-rearrangement")
+                    Toggle("Auto-Rearrangement", isOn: Binding(
+                        get: { settings.autoRearrangementEnabled },
+                        set: { newValue in
+                            settings = (try? settings.withAutoRearrangement(newValue)) ?? settings
+                        }
+                    ))
+                    .accessibilityLabel("Enable auto-rearrangement")
 
                     Text("Automatically move related tabs next to each other")
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Toggle("Tab Cleanup", isOn: $settings.cleanupEnabled)
-                        .accessibilityLabel("Enable tab cleanup")
+                    Toggle("Tab Cleanup", isOn: Binding(
+                        get: { settings.cleanupSuggestionsEnabled },
+                        set: { newValue in
+                            settings = (try? settings.withCleanupSuggestions(newValue)) ?? settings
+                        }
+                    ))
+                    .accessibilityLabel("Enable tab cleanup")
 
                     Text("Suggest closing inactive tabs")
                         .font(.caption)
@@ -81,7 +97,7 @@ public struct SettingsView: View {
                 }
 
                 // Cleanup Settings (FR-034)
-                if settings.cleanupEnabled {
+                if settings.cleanupSuggestionsEnabled {
                     Section {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
@@ -93,8 +109,10 @@ public struct SettingsView: View {
 
                             Slider(
                                 value: Binding(
-                                    get: { Double(settings.inactivityThreshold) },
-                                    set: { settings.inactivityThreshold = Int($0) }
+                                    get: { settings.inactivityThreshold },
+                                    set: { newValue in
+                                        settings = (try? settings.withInactivityThreshold(newValue)) ?? settings
+                                    }
                                 ),
                                 in: 900...14400, // 15 min to 4 hours
                                 step: 900 // 15 min increments
@@ -102,8 +120,13 @@ public struct SettingsView: View {
                             .accessibilityLabel("Inactivity threshold: \(thresholdLabel)")
                         }
 
-                        Toggle("Auto-close ungrouped tabs", isOn: $settings.autoCloseUngroups)
-                            .accessibilityLabel("Auto-close ungrouped tabs")
+                        Toggle("Auto-close ungrouped tabs", isOn: Binding(
+                            get: { settings.autoCloseUngroupedOnly },
+                            set: { newValue in
+                                settings = (try? settings.withAutoCloseUngroupedOnly(newValue)) ?? settings
+                            }
+                        ))
+                        .accessibilityLabel("Auto-close ungrouped tabs")
 
                         Text("Automatically close ungrouped tabs after threshold")
                             .font(.caption)
@@ -177,7 +200,9 @@ public struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

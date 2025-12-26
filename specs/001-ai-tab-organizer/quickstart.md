@@ -8,7 +8,7 @@
 ## Overview
 
 This Safari extension provides AI-powered tab organization through:
-- Manual and AI-suggested tab grouping
+- Manual and AI-suggested tab associationing
 - Context-aware tab highlighting
 - Automatic tab rearrangement
 - Intelligent tab cleanup
@@ -101,7 +101,7 @@ class SafariExtensionHandler: SFSafariExtensionHandler {
 **Files**: `Sources/TabOrganizerCore/Models/*.swift`, `Services/*.swift`
 
 **Responsibilities**:
-- Define domain entities (TabGroup, Tab, etc.)
+- Define domain entities (TabAssociation, Tab, etc.)
 - Implement business rules (group validation, cleanup logic)
 - Coordinate between storage and AI layers
 
@@ -111,18 +111,18 @@ import TabOrganizerSafariAPI
 import TabOrganizerStorage
 
 @MainActor
-final class TabGroupService: Sendable {
+final class TabAssociationService: Sendable {
     private let tabManager: TabManaging
-    private let repository: TabGroupRepository
+    private let repository: TabAssociationRepository
     
-    init(tabManager: TabManaging, repository: TabGroupRepository) {
+    init(tabManager: TabManaging, repository: TabAssociationRepository) {
         self.tabManager = tabManager
         self.repository = repository
     }
     
-    func createGroup(name: String, tabIDs: [String]) async throws -> TabGroup {
+    func createGroup(name: String, tabIDs: [String]) async throws -> TabAssociation {
         // Validate name uniqueness
-        // Create TabGroup entity
+        // Create TabAssociation entity
         // Save to repository
         // Return created group
     }
@@ -204,8 +204,8 @@ import TabOrganizerCore
 
 @MainActor
 struct GroupListView: View {
-    @Environment(TabGroupService.self) private var groupService
-    @State private var groups: [TabGroup] = []
+    @Environment(TabAssociationService.self) private var groupService
+    @State private var groups: [TabAssociation] = []
     
     var body: some View {
         List(groups) { group in
@@ -225,7 +225,7 @@ struct GroupListView: View {
 ### Step 1: Implement Core Models (P1 - Manual Groups)
 
 **Order**:
-1. Define `TabGroup` struct in `TabOrganizerCore/Models/TabGroup.swift`
+1. Define `TabAssociation` struct in `TabOrganizerCore/Models/TabAssociation.swift`
 2. Define `Tab` struct in `TabOrganizerCore/Models/Tab.swift`
 3. Write Swift Testing tests in `Tests/TabOrganizerCoreTests/ModelTests.swift`
 
@@ -234,8 +234,8 @@ struct GroupListView: View {
 import Testing
 @testable import TabOrganizerCore
 
-@Test func testTabGroupValidation() {
-    let group = TabGroup(name: "", tabIDs: [])
+@Test func testTabAssociationValidation() {
+    let group = TabAssociation(name: "", tabIDs: [])
     #expect(throws: ValidationError.self) {
         try group.validate()
     }
@@ -272,7 +272,7 @@ import Testing
 
 **Order**:
 1. Implement `SafariStorageAdapter` (low-level storage)
-2. Implement `TabGroupRepository` (group CRUD)
+2. Implement `TabAssociationRepository` (group CRUD)
 3. Implement `SettingsRepository` (settings persistence)
 4. Write tests with in-memory mock storage
 
@@ -281,15 +281,15 @@ import Testing
 ### Step 4: Implement Business Logic Services
 
 **Order**:
-1. `TabGroupService` (P1 - manual grouping)
+1. `TabAssociationService` (P1 - manual grouping)
 2. `TabTrackingService` (track lastViewedAt timestamps)
 3. `SettingsService` (load/save settings)
 
 **Dependency Injection Pattern**:
 ```swift
 let tabManager: TabManaging = SafariTabManager()
-let repository: TabGroupRepository = SafariGroupRepository()
-let groupService = TabGroupService(tabManager: tabManager, repository: repository)
+let repository: TabAssociationRepository = SafariGroupRepository()
+let groupService = TabAssociationService(tabManager: tabManager, repository: repository)
 ```
 
 ---
@@ -306,7 +306,7 @@ let groupService = TabGroupService(tabManager: tabManager, repository: repositor
 ```swift
 #Preview {
     GroupListView()
-        .environment(TabGroupService(
+        .environment(TabAssociationService(
             tabManager: MockTabManager(),
             repository: MockGroupRepository()
         ))
@@ -340,14 +340,14 @@ let groupService = TabGroupService(tabManager: tabManager, repository: repositor
 
 **Example Test Structure**:
 ```swift
-@Suite("TabGroupService Tests")
-struct TabGroupServiceTests {
+@Suite("TabAssociationService Tests")
+struct TabAssociationServiceTests {
     let mockTabManager = MockTabManager()
     let mockRepository = MockGroupRepository()
-    var service: TabGroupService!
+    var service: TabAssociationService!
     
     init() {
-        service = TabGroupService(
+        service = TabAssociationService(
             tabManager: mockTabManager,
             repository: mockRepository
         )
@@ -405,7 +405,7 @@ func testRealSafariTabAccess() async throws {
 ```swift
 // Log storage contents for debugging
 let adapter = SafariStorageAdapter()
-if let groups: [TabGroup] = try? await adapter.retrieve(key: "groups.main") {
+if let groups: [TabAssociation] = try? await adapter.retrieve(key: "groups.main") {
     print("Stored groups: \(groups)")
 }
 ```
