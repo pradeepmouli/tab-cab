@@ -1,0 +1,9 @@
+# Placeholder icons needed:
+# - icon-16.png (16x16)
+# - icon-32.png (32x32)
+# - icon-48.png (48x48)
+# - icon-96.png (96x96)
+# - icon-128.png (128x128)
+
+# These will be generated or added before production release.
+# For development, the converter will create default icons.

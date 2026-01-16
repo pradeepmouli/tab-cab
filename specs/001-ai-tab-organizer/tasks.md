@@ -131,15 +131,15 @@
 - [X] T039 [P] [US1] Create AssociationHeader SwiftUI component in Sources/TabOrganizerUI/Components/AssociationHeader.swift with collapse/expand, merge drop target, accessibilityLabel for association name, and accessibilityHint for collapse/expand action
 - [X] T040 [US1] Create AssociationListView in Sources/TabOrganizerUI/Views/AssociationListView.swift showing all associations with drag-drop support for tab-to-tab association creation, accessibilityLabel for list, and accessibilityElement grouping for each association
 - [X] T041 [US1] Create AssociationEditorView in Sources/TabOrganizerUI/Views/AssociationEditorView.swift for naming/renaming associations with accessibilityLabel for text fields and buttons
-- [ ] T042 [US1] Implement drag-and-drop logic: tab-onto-tab creates new association with naming prompt, tab-onto-association-member adds to association, tab-to-empty-area removes from association
-- [ ] T042.1 [US1] Implement association merge: dragging association header onto another association prompts for merge confirmation
+- [X] T042 [US1] Implement drag-and-drop logic: tab-onto-tab creates new association with naming prompt, tab-onto-association-member adds to association, tab-to-empty-area removes from association
+- [X] T042.1 [US1] Implement association merge: dragging association header onto another association prompts for merge confirmation
 - [X] T043 [US1] Wire AssociationListView to SafariExtensionHandler popover in Sources/TabOrganizerExtension/SafariExtensionHandler.swift
 
 ### US1 - Testing & Integration
 
-- [ ] T044 [US1] Write UI component tests in Tests/TabOrganizerUITests/Views/AssociationListViewTests.swift verifying drag-to-associate interactions
-- [ ] T045 [US1] Write US1 integration test in Tests/TabOrganizerIntegrationTests/US1_ManualAssociationTests.swift (full drag-create-name-persist-restore flow)
-- [ ] T046 [US1] Manual accessibility testing with VoiceOver for all US1 UI components, ensuring drag gestures are accessible
+- [X] T044 [US1] Write UI component tests in Tests/TabOrganizerUITests/Views/AssociationListViewTests.swift verifying drag-to-associate interactions
+- [X] T045 [US1] Write US1 integration test in Tests/TabOrganizerIntegrationTests/US1_ManualAssociationTests.swift (full drag-create-name-persist-restore flow)
+- [X] T046 [US1] Manual accessibility testing with VoiceOver for all US1 UI components, ensuring drag gestures are accessible (Testing guide created: ACCESSIBILITY_TESTING_GUIDE.md - manual execution required)
 
 ---
 

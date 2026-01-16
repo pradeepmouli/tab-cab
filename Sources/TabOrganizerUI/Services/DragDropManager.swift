@@ -38,7 +38,7 @@ public final class DragDropManager {
     }
 
     /// Result of a drag-drop operation
-    public enum DropResult {
+    public enum DropResult: Equatable {
         case createNewAssociation(tab1: String, tab2: String)
         case addToAssociation(tabID: String, associationID: UUID, fromAssociationID: UUID?)
         case removeFromAssociation(tabID: String, fromAssociationID: UUID)

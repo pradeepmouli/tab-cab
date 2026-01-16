@@ -29,6 +29,9 @@ public struct NewAssociationDialog: View {
     /// Callback when association is created
     let onCreate: (String, String) -> Void
 
+    /// Callback when dialog is cancelled
+    let onCancel: () -> Void
+
     // MARK: - State
 
     @State private var associationName: String
@@ -39,11 +42,13 @@ public struct NewAssociationDialog: View {
     public init(
         tab1: TabInfo,
         tab2: TabInfo,
-        onCreate: @escaping (String, String) -> Void
+        onCreate: @escaping (String, String) -> Void,
+        onCancel: @escaping () -> Void = {}
     ) {
         self.tab1 = tab1
         self.tab2 = tab2
         self.onCreate = onCreate
+        self.onCancel = onCancel
 
         // Generate suggested name from tabs
         _associationName = State(initialValue: Self.suggestName(from: tab1, and: tab2))
@@ -116,6 +121,7 @@ public struct NewAssociationDialog: View {
             // Actions
             HStack(spacing: 12) {
                 Button("Cancel") {
+                    onCancel()
                     dismiss()
                 }
                 .buttonStyle(.bordered)
@@ -197,32 +203,6 @@ public struct NewAssociationDialog: View {
 
         // Different domains - suggest generic name
         return "New Association"
-    }
-}
-
-// MARK: - Color Extension
-
-extension Color {
-    /// Creates a Color from a hex string.
-    init?(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-
-        guard Scanner(string: hex).scanHexInt64(&int) else {
-            return nil
-        }
-
-        let r, g, b: Double
-        switch hex.count {
-        case 6: // RGB
-            r = Double((int >> 16) & 0xFF) / 255.0
-            g = Double((int >> 8) & 0xFF) / 255.0
-            b = Double(int & 0xFF) / 255.0
-        default:
-            return nil
-        }
-
-        self.init(red: r, green: g, blue: b)
     }
 }
 

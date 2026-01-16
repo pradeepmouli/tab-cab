@@ -1,10 +1,13 @@
 {
-	"permissions": {
-		"allow": ["SlashCommand(/speckit.constitution)"]
-	},
-	"settings": {
-		"theme": "dark",
-		"font": "monospace",
-		"fontSize": 14
-	}
+  "permissions": {
+    "allow": [
+      "SlashCommand(/speckit.constitution)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh:*)"
+    ]
+  },
+  "settings": {
+    "theme": "dark",
+    "font": "monospace",
+    "fontSize": 14
+  }
 }

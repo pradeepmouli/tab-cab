@@ -8,6 +8,7 @@
 
 import SwiftUI
 import TabOrganizerCore
+import UniformTypeIdentifiers
 
 /// Header component for tab associations.
 ///
@@ -159,33 +160,33 @@ public struct GroupHeader: View {
     }
 }
 
-// MARK: - Color Extension
+// MARK: - Draggable Extension
 
-extension Color {
-    /// Creates a Color from a hex string.
+extension GroupHeader {
+    /// Makes the header draggable for association merging.
     ///
-    /// - Parameter hex: Hex color string (e.g., "#FF0000" or "FF0000")
-    /// - Returns: Color if valid hex, nil otherwise
-    init?(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-
-        guard Scanner(string: hex).scanHexInt64(&int) else {
-            return nil
-        }
-
-        let r, g, b: Double
-        switch hex.count {
-        case 6: // RGB
-            r = Double((int >> 16) & 0xFF) / 255.0
-            g = Double((int >> 8) & 0xFF) / 255.0
-            b = Double(int & 0xFF) / 255.0
-        default:
-            return nil
-        }
-
-        self.init(red: r, green: g, blue: b)
+    /// **FR-004.2**: Support drag-and-drop to merge associations
+    ///
+    /// - Returns: Modified view with drag capability
+    public func draggable() -> some View {
+        self
+            .draggable(DraggableAssociation(associationID: group.id))
     }
+}
+
+// MARK: - Transferable Types
+
+/// Transferable wrapper for dragging association headers
+struct DraggableAssociation: Codable, Transferable {
+    let associationID: UUID
+
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: .draggableAssociation)
+    }
+}
+
+extension UTType {
+    static let draggableAssociation = UTType(exportedAs: "com.taborganizer.draggable-association")
 }
 
 // MARK: - Preview

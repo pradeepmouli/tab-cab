@@ -40,7 +40,7 @@ final class SafariExtensionHandler: SFSafariExtensionHandler {
     override init() {
         // Initialize dependencies
         self.storage = UserDefaultsStorageAdapter()
-        self.tabManager = SafariTabManager()
+        self.tabManager = SafariTabManager.shared
 
         // Initialize repository
         let repository = SafariAssociationRepository(storage: storage)
@@ -73,6 +73,13 @@ final class SafariExtensionHandler: SFSafariExtensionHandler {
         Task {
             await handleMessage(messageName: messageName, from: page, userInfo: userInfo)
         }
+    }
+
+    /// Provides the view controller for the popover.
+    ///
+    /// Returns the shared SafariExtensionViewController that hosts the SwiftUI PopoverView.
+    override func popoverViewController() -> SFSafariExtensionViewController {
+        return SafariExtensionViewController.shared
     }
 
     /// Called when the toolbar item is clicked.

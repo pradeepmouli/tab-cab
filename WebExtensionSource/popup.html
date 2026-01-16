@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TabCab</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div id="app-container">
+        <header>
+            <h1>TabCab</h1>
+            <button id="settings-btn" aria-label="Settings">⚙️</button>
+        </header>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading tabs...</p>
+        </div>
+        
+        <div id="content" class="hidden">
+            <div id="search-container">
+                <input 
+                    type="search" 
+                    id="search-input" 
+                    placeholder="Search tabs or associations..."
+                    aria-label="Search tabs"
+                />
+            </div>
+            
+            <div id="associations-container">
+                <!-- AI-grouped and manual associations will be rendered here -->
+            </div>
+            
+            <div id="ungrouped-tabs-container">
+                <h2>Ungrouped Tabs</h2>
+                <div id="ungrouped-tabs-list">
+                    <!-- Ungrouped tabs will be rendered here -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="error" class="error hidden">
+            <p id="error-message"></p>
+            <button id="retry-btn">Retry</button>
+        </div>
+    </div>
+    
+    <script type="module" src="popup.js"></script>
+</body>
+</html>

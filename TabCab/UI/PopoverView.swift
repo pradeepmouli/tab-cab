@@ -44,7 +44,7 @@ public struct PopoverView: View {
     ) {
         // Create dependencies
         let actualStorage = storage ?? UserDefaultsStorageAdapter()
-        let actualTabManager = tabManager ?? SafariTabManager()
+        let actualTabManager = tabManager ?? SafariTabManager.shared
 
         // Create repository
         let repository = SafariAssociationRepository(storage: actualStorage)

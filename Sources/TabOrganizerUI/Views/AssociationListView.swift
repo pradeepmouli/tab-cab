@@ -9,6 +9,7 @@
 import SwiftUI
 import TabOrganizerCore
 import TabOrganizerSafariAPI
+import TabOrganizerUI
 
 /// Main view for displaying and managing tab associations.
 ///
@@ -31,6 +32,15 @@ public struct GroupListView: View {
     @State private var groupToDelete: TabAssociation?
     @State private var showConvertConfirmation: Bool = false
     @State private var groupToConvert: TabAssociation?
+
+    // Drag-and-drop state (T042)
+    @State private var dragDropManager = DragDropManager()
+    @State private var showNewAssociationDialog: Bool = false
+    @State private var newAssociationTabs: (String, String)?
+
+    // Association merge state (T042.1)
+    @State private var showMergeDialog: Bool = false
+    @State private var mergeAssociationIDs: (source: UUID, target: UUID)?
 
     // MARK: - Initialization
 
@@ -100,6 +110,40 @@ public struct GroupListView: View {
         } message: {
             if let group = groupToConvert {
                 Text("Convert '\(group.name)' to a native Safari tab association? This action cannot be undone.")
+            }
+        }
+        .sheet(isPresented: $showNewAssociationDialog) {
+            if let (tab1ID, tab2ID) = newAssociationTabs,
+               let tab1 = state.currentTabs.first(where: { $0.id == tab1ID }),
+               let tab2 = state.currentTabs.first(where: { $0.id == tab2ID }) {
+                NewAssociationDialog(
+                    tab1: tab1,
+                    tab2: tab2,
+                    onCreate: { name, color in
+                        createNewAssociation(name: name, color: color, tab1: tab1ID, tab2: tab2ID)
+                        showNewAssociationDialog = false
+                    },
+                    onCancel: {
+                        showNewAssociationDialog = false
+                    }
+                )
+            }
+        }
+        .sheet(isPresented: $showMergeDialog) {
+            if let (sourceID, targetID) = mergeAssociationIDs,
+               let sourceAssociation = state.filteredAssociations.first(where: { $0.id == sourceID }),
+               let targetAssociation = state.filteredAssociations.first(where: { $0.id == targetID }) {
+                MergeAssociationsDialog(
+                    sourceAssociation: sourceAssociation,
+                    targetAssociation: targetAssociation,
+                    onMerge: {
+                        mergeAssociations(sourceID: sourceID, targetID: targetID)
+                        showMergeDialog = false
+                    },
+                    onCancel: {
+                        showMergeDialog = false
+                    }
+                )
             }
         }
         .task {
@@ -235,6 +279,9 @@ public struct GroupListView: View {
                             }
                         )
                         .draggable(fromAssociationID: group.id)
+                        .dropDestination(for: DraggableTab.self) { items, location in
+                            handleTabDrop(items: items, targetTab: tab.id, targetAssociation: group.id)
+                        }
                     }
                 }
             }
@@ -255,6 +302,13 @@ public struct GroupListView: View {
                     confirmConvertToNative(group)
                 }
             )
+            .draggable()
+            .dropDestination(for: DraggableTab.self) { items, location in
+                handleTabDrop(items: items, targetTab: nil, targetAssociation: group.id)
+            }
+            .dropDestination(for: DraggableAssociation.self) { items, location in
+                handleAssociationDrop(items: items, targetAssociation: group.id)
+            }
         }
     }
 
@@ -273,6 +327,9 @@ public struct GroupListView: View {
                     }
                 )
                 .draggable(fromAssociationID: Optional<UUID>.none)
+                .dropDestination(for: DraggableTab.self) { items, location in
+                    handleTabDrop(items: items, targetTab: tab.id, targetAssociation: nil)
+                }
             }
         } header: {
             HStack {
@@ -371,6 +428,295 @@ public struct GroupListView: View {
     private func activateTab(_ tab: TabInfo) {
         // TODO: Call Safari API to activate tab
         print("Activate tab: \(tab.title)")
+    }
+
+    // MARK: - Drag-and-Drop Actions (T042)
+
+    /// Handles the result of a drop operation.
+    ///
+    /// **FR-001**: Shows dialog only for new association creation
+    /// **FR-004**: Silently adds tabs to existing associations
+    /// **FR-004.1**: Removes tabs from associations
+    /// **FR-004.2**: Merges associations
+    private func handleDropResult(_ result: DragDropManager.DropResult) {
+        switch result {
+        case let .createNewAssociation(tab1, tab2):
+            // Only show dialog for NEW associations (per user feedback)
+            newAssociationTabs = (tab1, tab2)
+            showNewAssociationDialog = true
+
+        case let .addToAssociation(tabID, associationID, fromAssociationID):
+            // Silently add to existing association (no dialog)
+            addTabToAssociation(tabID: tabID, associationID: associationID, fromAssociationID: fromAssociationID)
+
+        case let .removeFromAssociation(tabID, fromAssociationID):
+            removeTabFromAssociation(tabID: tabID, fromAssociationID: fromAssociationID)
+
+        case let .mergeAssociations(source, target):
+            // Show merge confirmation dialog (T042.1)
+            mergeAssociationIDs = (source: source, target: target)
+            showMergeDialog = true
+
+        case .noAction:
+            break
+        }
+    }
+
+    /// Creates a new association from two ungrouped tabs.
+    private func createNewAssociation(name: String, color: String, tab1: String, tab2: String) {
+        Task {
+            do {
+                _ = try await state.associationService.createAssociation(
+                    name: name,
+                    color: color,
+                    tabIDs: [tab1, tab2],
+                    windowID: state.currentWindowID
+                )
+            } catch {
+                state.handleError(error)
+            }
+        }
+    }
+
+    /// Adds a tab to an existing association.
+    private func addTabToAssociation(tabID: String, associationID: UUID, fromAssociationID: UUID?) {
+        Task {
+            do {
+                // If moving from another association, remove first
+                if let fromID = fromAssociationID {
+                    try await state.associationService.removeTabFromAssociation(
+                        tabID: tabID,
+                        associationID: fromID,
+                        windowID: state.currentWindowID
+                    )
+                }
+
+                // Add to target association
+                try await state.associationService.addTabToAssociation(
+                    tabID: tabID,
+                    associationID: associationID,
+                    windowID: state.currentWindowID
+                )
+            } catch {
+                state.handleError(error)
+            }
+        }
+    }
+
+    /// Removes a tab from an association.
+    private func removeTabFromAssociation(tabID: String, fromAssociationID: UUID) {
+        Task {
+            do {
+                try await state.associationService.removeTabFromAssociation(
+                    tabID: tabID,
+                    associationID: fromAssociationID,
+                    windowID: state.currentWindowID
+                )
+            } catch {
+                state.handleError(error)
+            }
+        }
+    }
+
+    /// Merges two associations together (T042.1).
+    ///
+    /// **FR-004.2**: Merge associations by combining all tabs
+    ///
+    /// - Parameters:
+    ///   - sourceID: The association to merge from (will be deleted)
+    ///   - targetID: The association to merge into (will contain all tabs)
+    private func mergeAssociations(sourceID: UUID, targetID: UUID) {
+        Task {
+            do {
+                // Get both associations
+                guard let sourceAssoc = state.filteredAssociations.first(where: { $0.id == sourceID }),
+                      let targetAssoc = state.filteredAssociations.first(where: { $0.id == targetID }) else {
+                    return
+                }
+
+                // Add all tabs from source to target
+                for tabID in sourceAssoc.tabIDs {
+                    try await state.associationService.addTabToAssociation(
+                        tabID: tabID,
+                        associationID: targetID,
+                        windowID: state.currentWindowID
+                    )
+                }
+
+                // Delete the source association
+                try await state.associationService.deleteAssociation(
+                    associationID: sourceID,
+                    windowID: state.currentWindowID
+                )
+            } catch {
+                state.handleError(error)
+            }
+        }
+    }
+
+    // MARK: - Modern Drop Handlers
+
+    /// Handles tab drops using modern Transferable API.
+    private func handleTabDrop(items: [DraggableTab], targetTab: String?, targetAssociation: UUID?) -> Bool {
+        guard let draggedTab = items.first else { return false }
+
+        // Determine the drop target
+        let target: DragDropManager.DropTarget
+        if let tabID = targetTab {
+            target = .tab(id: tabID, inAssociationID: targetAssociation)
+        } else if let assocID = targetAssociation {
+            target = .association(id: assocID)
+        } else {
+            target = .emptyArea
+        }
+
+        // Set up the drag state
+        dragDropManager.beginDragTab(tabID: draggedTab.tabID, fromAssociationID: draggedTab.fromAssociationID)
+
+        // Handle the drop
+        let result = dragDropManager.handleDrop(on: target)
+        handleDropResult(result)
+
+        return result != .noAction
+    }
+
+    /// Handles association drops (merges).
+    private func handleAssociationDrop(items: [DraggableAssociation], targetAssociation: UUID) -> Bool {
+        guard let draggedAssoc = items.first else { return false }
+
+        // Set up the drag state
+        dragDropManager.beginDragAssociation(associationID: draggedAssoc.associationID)
+
+        // Handle the drop
+        let target = DragDropManager.DropTarget.association(id: targetAssociation)
+        let result = dragDropManager.handleDrop(on: target)
+        handleDropResult(result)
+
+        return result != .noAction
+    }
+}
+
+// MARK: - Drop Delegates
+
+/// DropDelegate for handling tab drop operations.
+private struct TabDropDelegate: DropDelegate {
+    let manager: DragDropManager
+    let target: DragDropManager.DropTarget
+    let onDrop: (DragDropManager.DropResult) -> Void
+
+    func performDrop(info: DropInfo) -> Bool {
+        // Extract the dragged tab ID and source association from the drop info
+        guard let itemProvider = info.itemProviders(for: [.text]).first else {
+            return false
+        }
+
+        // Load the tab ID (synchronously for simplicity in this context)
+        var draggedTabID: String?
+        var sourceAssociationID: UUID?
+
+        let semaphore = DispatchSemaphore(value: 0)
+
+        itemProvider.loadObject(ofClass: NSString.self) { object, error in
+            if let tabID = object as? String {
+                draggedTabID = tabID
+
+                // Extract source association from suggested name if present
+                if let suggestedName = itemProvider.suggestedName,
+                   let uuid = UUID(uuidString: suggestedName) {
+                    sourceAssociationID = uuid
+                }
+            }
+            semaphore.signal()
+        }
+
+        _ = semaphore.wait(timeout: .now() + 1.0)
+
+        guard let tabID = draggedTabID else {
+            return false
+        }
+
+        // Set the drag item in the manager
+        manager.beginDragTab(tabID: tabID, fromAssociationID: sourceAssociationID)
+
+        // Handle the drop
+        let result = manager.handleDrop(on: target)
+        onDrop(result)
+        return result != .noAction
+    }
+
+    func dropEntered(info: DropInfo) {
+        // Visual feedback could be added here
+    }
+
+    func dropExited(info: DropInfo) {
+        // Clear visual feedback
+    }
+
+    func validateDrop(info: DropInfo) -> Bool {
+        info.hasItemsConforming(to: [.text])
+    }
+}
+
+/// DropDelegate for handling association header drop operations (merge).
+private struct AssociationDropDelegate: DropDelegate {
+    let manager: DragDropManager
+    let target: DragDropManager.DropTarget
+    let onDrop: (DragDropManager.DropResult) -> Void
+
+    func performDrop(info: DropInfo) -> Bool {
+        // Extract the dragged item from the drop info
+        guard let itemProvider = info.itemProviders(for: [.text]).first else {
+            return false
+        }
+
+        // Check if this is an association being dragged
+        var draggedItem: String?
+        var draggedAssociationID: UUID?
+
+        let semaphore = DispatchSemaphore(value: 0)
+
+        itemProvider.loadObject(ofClass: NSString.self) { object, error in
+            if let item = object as? String {
+                draggedItem = item
+
+                // Extract association ID from suggested name
+                if let suggestedName = itemProvider.suggestedName,
+                   let uuid = UUID(uuidString: suggestedName) {
+                    draggedAssociationID = uuid
+                }
+            }
+            semaphore.signal()
+        }
+
+        _ = semaphore.wait(timeout: .now() + 1.0)
+
+        // Determine if this is an association drag or tab drag
+        if draggedItem == "association", let associationID = draggedAssociationID {
+            // Association being dragged - set up for merge
+            manager.beginDragAssociation(associationID: associationID)
+        } else if let tabID = draggedItem {
+            // Tab being dragged onto association - set up for add
+            manager.beginDragTab(tabID: tabID, fromAssociationID: draggedAssociationID)
+        } else {
+            return false
+        }
+
+        // Handle the drop
+        let result = manager.handleDrop(on: target)
+        onDrop(result)
+        return result != .noAction
+    }
+
+    func dropEntered(info: DropInfo) {
+        // Visual feedback could be added here
+    }
+
+    func dropExited(info: DropInfo) {
+        // Clear visual feedback
+    }
+
+    func validateDrop(info: DropInfo) -> Bool {
+        info.hasItemsConforming(to: [.text])
     }
 }
 

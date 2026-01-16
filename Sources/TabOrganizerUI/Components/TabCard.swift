@@ -9,6 +9,7 @@
 import SwiftUI
 import TabOrganizerCore
 import TabOrganizerSafariAPI
+import UniformTypeIdentifiers
 
 /// SwiftUI card component for displaying a browser tab.
 ///
@@ -170,18 +171,24 @@ extension TabCard {
     /// - Returns: Modified view with drag capability
     public func draggable(fromAssociationID associationID: UUID?) -> some View {
         self
-            .onDrag {
-                // Create drag item with tab ID
-                let itemProvider = NSItemProvider(object: tab.id as NSString)
-
-                // Store source association ID in suggested name (for move operation)
-                if let associationID {
-                    itemProvider.suggestedName = associationID.uuidString
-                }
-
-                return itemProvider
-            }
+            .draggable(DraggableTab(tabID: tab.id, fromAssociationID: associationID))
     }
+}
+
+// MARK: - Transferable Types
+
+/// Transferable wrapper for dragging tabs
+struct DraggableTab: Codable, Transferable {
+    let tabID: String
+    let fromAssociationID: UUID?
+
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: .draggableTab)
+    }
+}
+
+extension UTType {
+    static let draggableTab = UTType(exportedAs: "com.taborganizer.draggable-tab")
 }
 
 // MARK: - Preview
